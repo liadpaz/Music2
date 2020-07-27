@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="AlwaysShowAction">
+    <item
+        android:id="@+id/songsFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_music_note"
+        android:title="@string/nav_songs"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/playlistsFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_playlist"
+        android:title="@string/nav_playlists"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/albumsFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_album"
+        android:title="@string/nav_albums"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/artistsFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_artist"
+        android:title="@string/nav_artists"
+        app:showAsAction="always" />
+</menu>

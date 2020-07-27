@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name" translatable="false">Music</string>
+    <string name="nav_songs">Songs</string>
+    <string name="nav_playlists">Playlists</string>
+    <string name="nav_albums">Albums</string>
+    <string name="nav_artists">Artists</string>
+    <string name="notification_channel_name">Playing Music</string>
+    <string name="notification_channel_description">Show what music is playing</string>
+    <string name="item_artist_songs">%d songs</string>
+    <string name="nav_album">Album</string>
+</resources>

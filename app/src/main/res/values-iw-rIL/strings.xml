@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_songs">שירים</string>
+    <string name="nav_playlists">פלייליסטים</string>
+    <string name="nav_albums">אלבומים</string>
+    <string name="nav_artists">אמנים</string>
+    <string name="notification_channel_name">מנגן מוזיקה</string>
+    <string name="notification_channel_description">מראה איזה מוזיקה מתנגנת</string>
+    <string name="item_artist_songs">%d שירים</string>
+    <string name="nav_album">אלבום</string>
+</resources>
