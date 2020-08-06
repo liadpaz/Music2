@@ -1,94 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:clipToPadding="true"
-    android:fitsSystemWindows="false"
-    tools:context=".ui.main.MainActivity">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <LinearLayout
-        android:id="@+id/mainContent"
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.liadpaz.music.ui.viewmodels.PlayingViewModel" />
+    </data>
+
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:paddingBottom="164dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <com.google.android.material.appbar.AppBarLayout
-            android:id="@+id/appBarMain"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?attr/colorPrimary"
-            android:fitsSystemWindows="true">
-
-            <com.google.android.material.appbar.MaterialToolbar
-                android:id="@+id/toolbarMain"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize" />
-        </com.google.android.material.appbar.AppBarLayout>
-
-        <fragment
-            android:id="@+id/nav_host_fragment"
-            android:name="androidx.navigation.fragment.NavHostFragment"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            app:defaultNavHost="true"
-            app:navGraph="@navigation/main_nav_graph"
-            tools:ignore="FragmentTagUsage" />
-    </LinearLayout>
-
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:fitsSystemWindows="false"
+        tools:context=".ui.main.MainActivity">
 
         <LinearLayout
-            android:id="@+id/bottomSheet"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_gravity="top"
-            android:background="?attr/colorPrimaryDark"
-            android:orientation="vertical"
-            android:paddingBottom="?attr/actionBarSize"
-            app:behavior_hideable="true"
-            app:behavior_peekHeight="164dp"
-            app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+            android:orientation="vertical">
 
-            <androidx.fragment.app.FragmentContainerView
-                android:id="@+id/topBottomSheet"
-                android:layout_width="match_parent"
-                android:name="com.liadpaz.music.ui.fragments.NowPlayingFragment"
-                android:layout_height="wrap_content" />
-
-            <androidx.fragment.app.FragmentContainerView
-                android:id="@+id/mainBottomSheet"
+            <LinearLayout
+                android:id="@+id/mainContent"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toTopOf="@id/bottomNavView"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
-            <androidx.fragment.app.FragmentContainerView
-                android:id="@+id/transportControlsBottomSheet"
+                <com.google.android.material.appbar.AppBarLayout
+                    android:id="@+id/appBarMain"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/colorPrimary"
+                    android:fitsSystemWindows="true">
+
+                    <com.google.android.material.appbar.MaterialToolbar
+                        android:id="@+id/toolbarMain"
+                        android:layout_width="match_parent"
+                        android:layout_height="?attr/actionBarSize" />
+                </com.google.android.material.appbar.AppBarLayout>
+
+                <fragment
+                    android:id="@+id/nav_host_fragment"
+                    android:name="androidx.navigation.fragment.NavHostFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    app:defaultNavHost="true"
+                    app:navGraph="@navigation/main_nav_graph"
+                    tools:ignore="FragmentTagUsage" />
+            </LinearLayout>
+
+            <com.google.android.material.bottomnavigation.BottomNavigationView
+                android:id="@+id/bottomNavView"
+                style="@style/Widget.MaterialComponents.BottomNavigationView.Colored"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:fitsSystemWindows="true"
+                app:labelVisibilityMode="labeled"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:menu="@menu/menu_bottom_nav" />
+
         </LinearLayout>
 
-        <com.google.android.material.bottomnavigation.BottomNavigationView
-            android:id="@+id/bottomNavView"
-            style="@style/Widget.MaterialComponents.BottomNavigationView.Colored"
+        <androidx.coordinatorlayout.widget.CoordinatorLayout
+            android:id="@+id/coordinatorLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            app:labelVisibilityMode="labeled"
-            app:layout_behavior=".ui.utils.BottomNavBehavior"
-            app:menu="@menu/menu_bottom_nav" />
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
-</androidx.constraintlayout.widget.ConstraintLayout>
+            android:layout_height="match_parent"
+            android:layout_marginBottom="?attr/actionBarSize">
+
+            <LinearLayout
+                android:id="@+id/bottomSheet"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="?attr/colorPrimaryDark"
+                android:orientation="vertical"
+                app:behavior_hideable="true"
+                app:behavior_peekHeight="@dimen/bottomSheetHeight"
+                app:behavior_skipCollapsed="false"
+                app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+                <include
+                    android:id="@+id/layoutNowPlaying"
+                    layout="@layout/layout_now_playing"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:viewModel="@{viewModel}" />
+
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/topBottomSheet"
+                    android:name="com.liadpaz.music.ui.fragments.ExtendedFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+            </LinearLayout>
+        </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    </FrameLayout>
+</layout>

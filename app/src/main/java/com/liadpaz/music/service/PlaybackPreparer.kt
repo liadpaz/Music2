@@ -5,16 +5,14 @@ import android.os.Bundle
 import android.os.ResultReceiver
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
 import com.google.android.exoplayer2.ControlDispatcher
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.liadpaz.music.data.findArtists
-import com.liadpaz.music.data.firstArtist
 import com.liadpaz.music.service.utils.MusicSource
 import com.liadpaz.music.utils.extensions.*
+import kotlinx.coroutines.flow.asFlow
 
 class PlaybackPreparer(private val musicSource: MusicSource, private val exoPlayer: ExoPlayer, private val dataSourceFactory: DefaultDataSourceFactory) : MediaSessionConnector.PlaybackPreparer {
 
@@ -33,12 +31,11 @@ class PlaybackPreparer(private val musicSource: MusicSource, private val exoPlay
             val itemToPlay: MediaMetadataCompat = musicSource.find { item ->
                 item.id == mediaId
             }!!
-            val metadataList = when (extras?.getString(EXTRA_FROM) ?: EXTRA_FROM_ALL) {
-                EXTRA_FROM_ALL -> musicSource.filter { true }.apply { if (shuffle) shuffled() }
+            val metadataList = when (extras?.getString(EXTRA_FROM)) {
                 EXTRA_FROM_PLAYLISTS -> TODO("implement custom playlists")
                 EXTRA_FROM_ALBUMS -> buildPlaylistWithAlbum(itemToPlay).apply { if (shuffle) shuffled() }
-                EXTRA_FROM_ARTISTS -> buildPlaylistWithArtist(itemToPlay).apply { if (shuffle) shuffled() }
-                else -> throw IllegalArgumentException()
+                EXTRA_FROM_ARTISTS -> buildPlaylistWithArtist(extras[EXTRA_ARTIST] as String).apply { if (shuffle) shuffled() }
+                else ->  musicSource.toList().apply { if (shuffle) shuffled() }
             }
             val mediaSource = metadataList.toMediaSource(dataSourceFactory)
 
@@ -71,8 +68,8 @@ class PlaybackPreparer(private val musicSource: MusicSource, private val exoPlay
     private fun buildPlaylistWithAlbum(item: MediaMetadataCompat): List<MediaMetadataCompat> =
         musicSource.filter { it.album == item.album }
 
-    private fun buildPlaylistWithArtist(item: MediaMetadataCompat): List<MediaMetadataCompat> =
-        musicSource.filter { it.artist.containsCaseInsensitive(item.artist) }
+    private fun buildPlaylistWithArtist(artist: String): List<MediaMetadataCompat> =
+        musicSource.filter { it.artist.containsCaseInsensitive(artist) }
 }
 
 
@@ -82,7 +79,7 @@ const val EXTRA_FROM_PLAYLISTS = "playlists"
 const val EXTRA_FROM_ALBUMS = "albums"
 const val EXTRA_FROM_ARTISTS = "artists"
 
-
+const val EXTRA_ARTIST = "artist"
 const val EXTRA_SHUFFLE = "shuffle"
 const val EXTRA_POSITION = "position"
 

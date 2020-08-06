@@ -8,7 +8,6 @@ import android.os.Looper
 import android.os.SystemClock
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
 import androidx.lifecycle.*
 import androidx.palette.graphics.Palette
 import com.liadpaz.music.service.EMPTY_PLAYBACK_STATE
@@ -76,8 +75,6 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
     }
 
     override fun onCleared() {
-        Log.d(TAG, "onCleared: ")
-
         serviceConnection.playbackState.removeObserver(playbackStateObserver)
         serviceConnection.nowPlaying.removeObserver(mediaMetadataObserver)
 
@@ -104,10 +101,10 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
     }
 
     fun playPause() = serviceConnection.transportControls.apply {
-        if (_playbackState.value?.state == PlaybackStateCompat.STATE_PLAYING) {
-            pause()
-        } else {
-            play()
+        when (_playbackState.value?.state) {
+            PlaybackStateCompat.STATE_PLAYING,
+            PlaybackStateCompat.STATE_BUFFERING -> pause()
+            else -> play()
         }
     }
 

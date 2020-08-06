@@ -4,8 +4,6 @@
 
     <data>
 
-        <import type="android.support.v4.media.session.PlaybackStateCompat" />
-
         <variable
             name="viewModel"
             type="com.liadpaz.music.ui.viewmodels.PlayingViewModel" />
@@ -13,15 +11,32 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="@dimen/bottomSheetHeight">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent=".5" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_begin="@dimen/bottomSheetHeight" />
 
         <ImageView
-            android:id="@+id/ivPlayingArt"
-            android:layout_width="wrap_content"
+            android:id="@+id/ivArtPreview"
+            android:layout_width="0dp"
             android:layout_height="0dp"
             android:adjustViewBounds="true"
-            android:transitionName="albumArt"
+            android:cropToPadding="true"
+            android:padding="8dp"
+            android:transitionName="art"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/guideline4"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:uri="@{viewModel.mediaMetadata.albumArtUri}" />
@@ -31,16 +46,14 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
-            android:layout_marginBottom="8dp"
-            android:ellipsize="end"
-            android:maxLines="1"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:singleLine="true"
             android:text="@{viewModel.mediaMetadata.title}"
-            app:layout_constraintBottom_toTopOf="@+id/guideline2"
-            app:layout_constraintEnd_toStartOf="@+id/ibPlayPause"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toEndOf="@+id/ivPlayingArt"
+            app:layout_constraintBottom_toTopOf="@+id/guideline3"
+            app:layout_constraintEnd_toStartOf="@+id/imageButton"
+            app:layout_constraintStart_toStartOf="@+id/guideline4"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
@@ -48,37 +61,30 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
-            android:ellipsize="end"
             android:maxLines="1"
             android:text="@{viewModel.mediaMetadata.artist}"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/ibPlayPause"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toEndOf="@+id/ivPlayingArt"
-            app:layout_constraintTop_toTopOf="@+id/guideline2" />
+            app:layout_constraintEnd_toStartOf="@+id/imageButton"
+            app:layout_constraintStart_toStartOf="@+id/guideline4"
+            app:layout_constraintTop_toTopOf="@+id/guideline3" />
 
         <ImageButton
-            android:id="@+id/ibPlayPause"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:id="@+id/imageButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
             android:adjustViewBounds="true"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:onClick="@{() -> viewModel.playPause()}"
+            android:padding="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:playPause="@{viewModel.playbackState.state == PlaybackStateCompat.STATE_PLAYING}" />
+            app:playPause="@{viewModel.playbackState}"
+            app:srcCompat="@drawable/ic_notification_play" />
 
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintGuide_percent="0.5" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

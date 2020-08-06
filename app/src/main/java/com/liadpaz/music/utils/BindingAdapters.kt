@@ -2,6 +2,7 @@ package com.liadpaz.music.utils
 
 import android.net.Uri
 import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.widget.ImageButton
 import android.widget.ImageView
 import androidx.databinding.BindingAdapter
@@ -33,8 +34,14 @@ fun setUri(imageView: ImageView, uri: Uri?) {
 }
 
 @BindingAdapter("playPause")
-fun setPlayPause(imageButton: ImageButton, expression: Boolean) {
-    imageButton.setImageResource(if (expression) R.drawable.ic_notification_pause else R.drawable.ic_notification_play)
+fun setPlayPause(imageButton: ImageButton, playbackState: PlaybackStateCompat?) {
+    imageButton.setImageResource(
+        when (playbackState?.state) {
+            PlaybackStateCompat.STATE_BUFFERING,
+            PlaybackStateCompat.STATE_PLAYING -> R.drawable.ic_notification_pause
+            else -> R.drawable.ic_notification_play
+        }
+    )
 }
 
 @BindingAdapter("artistSongs")

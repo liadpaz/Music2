@@ -18,6 +18,9 @@
             android:id="@+id/rvArtists"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/bottomSheetHeight"
             app:artists="@{viewModel.artists}" />
 
     </LinearLayout>

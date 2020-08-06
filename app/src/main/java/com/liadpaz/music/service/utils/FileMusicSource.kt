@@ -5,7 +5,6 @@ import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import com.liadpaz.music.data.Song
-import com.liadpaz.music.utils.GlideApp
 import com.liadpaz.music.utils.contentprovider.SongProvider
 import com.liadpaz.music.utils.extensions.*
 import kotlinx.coroutines.Dispatchers
@@ -14,7 +13,6 @@ import kotlinx.coroutines.withContext
 class FileMusicSource(context: Context) : AbstractMusicSource() {
 
     private var catalog = emptyList<MediaMetadataCompat>()
-    private val glide = GlideApp.with(context)
     private val provider = SongProvider(context)
 
     init {
@@ -34,14 +32,7 @@ class FileMusicSource(context: Context) : AbstractMusicSource() {
 
     private suspend fun updateCatalog(): List<MediaMetadataCompat>? = withContext(Dispatchers.IO) {
         provider.getContentProviderValue()?.map { song ->
-//            val bitmap = glide.asBitmap().load(song.artUri).submit().get()
-
-            MediaMetadataCompat.Builder()
-                .from(song)
-//                .putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, bitmap)
-//                .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, bitmap)
-//                .putBitmap(MediaMetadataCompat.METADATA_KEY_ART, bitmap)
-                .build()
+            MediaMetadataCompat.Builder().from(song).build()
         }
     }
 
@@ -62,17 +53,12 @@ fun MediaMetadataCompat.Builder.from(song: Song): MediaMetadataCompat.Builder {
     albumArtUri = song.artUri.toString()
     flag = MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
 
-    // To make things easier for *displaying* these, set the display properties as well.
     displayTitle = song.title
     displaySubtitle = song.artist
     displayDescription = song.album
     displayIconUri = song.artUri.toString()
 
-    // Add downloadStatus to force the creation of an "extras" bundle in the resulting
-    // MediaMetadataCompat object. This is needed to send accurate metadata to the
-    // media session during updates.
     downloadStatus = MediaDescriptionCompat.STATUS_DOWNLOADED
 
-    // Allow it to be used in the typical builder style.
     return this
 }

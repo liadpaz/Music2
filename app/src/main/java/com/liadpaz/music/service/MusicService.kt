@@ -83,6 +83,8 @@ class MusicService : MediaBrowserServiceCompat() {
     override fun onCreate() {
         super.onCreate()
 
+        Log.d(TAG, "onCreate: ")
+
         repository.granted.observeForever(permissionGrantedObserver)
 
         val sessionActivityPendingIntent =
@@ -130,6 +132,8 @@ class MusicService : MediaBrowserServiceCompat() {
         }
 
         repository.granted.removeObserver(permissionGrantedObserver)
+
+        Log.d(TAG, "onDestroy: ")
 
         serviceJob.cancel()
 

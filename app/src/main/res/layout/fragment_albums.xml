@@ -19,7 +19,9 @@
             android:id="@+id/rvAlbums"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:clipToPadding="false"
             android:orientation="vertical"
+            android:paddingBottom="@dimen/bottomSheetHeight"
             app:albums="@{viewModel.albums}"
             app:layoutManager="androidx.recyclerview.widget.GridLayoutManager" />
 
