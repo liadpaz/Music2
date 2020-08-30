@@ -5,7 +5,7 @@ import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import com.liadpaz.music.data.findArtists
-import com.liadpaz.music.data.firstArtist
+import com.liadpaz.music.data.firstFirstArtist
 import com.liadpaz.music.utils.extensions.*
 import java.util.*
 
@@ -71,7 +71,7 @@ class BrowseTree(context: Context, musicSource: MusicSource) {
         val albumMetadata = MediaMetadataCompat.Builder().apply {
             id = "$ALBUMS_ROOT/${mediaItem.album}"
             title = mediaItem.album
-            artist = mediaItem.firstArtist()
+            artist = mediaItem.firstFirstArtist()
             album = mediaItem.album
             albumArtUri = mediaItem.albumArtUri.toString()
             flag = MediaBrowserCompat.MediaItem.FLAG_BROWSABLE

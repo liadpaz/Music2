@@ -32,5 +32,8 @@ object InjectorUtils {
         ArtistViewModel.Factory(ServiceConnection.getInstance(context, ComponentName(context, MusicService::class.java)), Repository.getInstance(context), artist)
 
     fun providePlayingViewModelFactory(application: Application) =
-        PlayingViewModel.Factory(application, ServiceConnection.getInstance(application, ComponentName(application, MusicService::class.java)))
+        PlayingViewModel.Factory(application, ServiceConnection.getInstance(application, ComponentName(application, MusicService::class.java)), Repository.getInstance(application))
+
+    fun provideExtendedSongViewModelFactory(context: Context) =
+        ExtendedSongViewModel.Factory(ServiceConnection.getInstance(context, ComponentName(context, MusicService::class.java)))
 }

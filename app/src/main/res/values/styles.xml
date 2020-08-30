@@ -3,10 +3,6 @@
     <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
-        <!--        <item name="android:windowNoTitle">true</item>-->
-        <!--        <item name="android:windowActionBar">false</item>-->
-        <!--        <item name="android:windowFullscreen">false</item>-->
-        <!--        <item name="android:windowContentOverlay">@null</item>-->
     </style>
 
     <style name="AppTheme.Blue" parent="AppTheme">

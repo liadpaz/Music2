@@ -3,40 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main_nav_graph"
-    app:startDestination="@id/songsFragment">
+    app:startDestination="@id/mainFragment">
 
-    <fragment
-        android:id="@+id/songsFragment"
-        android:name="com.liadpaz.music.ui.fragments.SongsFragment"
-        android:label="@string/nav_songs"
-        tools:layout="@layout/fragment_songs" />
-    <fragment
-        android:id="@+id/albumsFragment"
-        android:name="com.liadpaz.music.ui.fragments.AlbumsFragment"
-        android:label="@string/nav_albums"
-        tools:layout="@layout/fragment_albums" >
-        <action
-            android:id="@+id/action_albumsFragment_to_albumFragment"
-            app:destination="@id/albumFragment" />
-    </fragment>
-    <fragment
-        android:id="@+id/playlistsFragment"
-        android:name="com.liadpaz.music.ui.fragments.PlaylistsFragment"
-        android:label="@string/nav_playlists"
-        tools:layout="@layout/fragment_playlists" />
-    <fragment
-        android:id="@+id/artistsFragment"
-        android:name="com.liadpaz.music.ui.fragments.ArtistsFragment"
-        android:label="@string/nav_artists"
-        tools:layout="@layout/fragment_artists" >
-        <action
-            android:id="@+id/action_artistsFragment_to_artistFragment"
-            app:destination="@id/artistFragment" />
-    </fragment>
     <fragment
         android:id="@+id/albumFragment"
         android:name="com.liadpaz.music.ui.fragments.AlbumFragment"
-        android:label="@string/nav_album"
         tools:layout="@layout/fragment_album">
         <argument
             android:name="album"
@@ -45,9 +16,21 @@
     <fragment
         android:id="@+id/artistFragment"
         android:name="com.liadpaz.music.ui.fragments.ArtistFragment"
-        android:label="ArtistFragment" >
+        tools:layout="@layout/fragment_artist">
         <argument
             android:name="artist"
             app:argType="android.support.v4.media.MediaBrowserCompat$MediaItem" />
+    </fragment>
+    <fragment
+        android:id="@+id/mainFragment"
+        android:name="com.liadpaz.music.ui.fragments.MainFragment"
+        android:label="main_fragment"
+        tools:layout="@layout/fragment_main" >
+        <action
+            android:id="@+id/action_mainFragment_to_albumFragment"
+            app:destination="@id/albumFragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_artistFragment"
+            app:destination="@id/artistFragment" />
     </fragment>
 </navigation>

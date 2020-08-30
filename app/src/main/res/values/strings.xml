@@ -8,4 +8,5 @@
     <string name="notification_channel_description">Show what music is playing</string>
     <string name="item_artist_songs">%d songs</string>
     <string name="nav_album">Album</string>
+    <string name="description_more">Show more options</string>
 </resources>

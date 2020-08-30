@@ -52,7 +52,7 @@
             android:singleLine="true"
             android:text="@{viewModel.mediaMetadata.title}"
             app:layout_constraintBottom_toTopOf="@+id/guideline3"
-            app:layout_constraintEnd_toStartOf="@+id/imageButton"
+            app:layout_constraintEnd_toStartOf="@+id/ibPlayPause"
             app:layout_constraintStart_toStartOf="@+id/guideline4"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -65,12 +65,12 @@
             android:maxLines="1"
             android:text="@{viewModel.mediaMetadata.artist}"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/imageButton"
+            app:layout_constraintEnd_toStartOf="@+id/ibPlayPause"
             app:layout_constraintStart_toStartOf="@+id/guideline4"
             app:layout_constraintTop_toTopOf="@+id/guideline3" />
 
         <ImageButton
-            android:id="@+id/imageButton"
+            android:id="@+id/ibPlayPause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"

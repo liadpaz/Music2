@@ -7,8 +7,6 @@ import com.liadpaz.music.service.ServiceConnection
 
 class MainViewModel(private val serviceConnection: ServiceConnection, private val repository: Repository) : ViewModel() {
 
-    fun stop() = serviceConnection.transportControls.stop()
-
     fun onPermissionGranted() {
         repository.setPermissionGranted(true)
     }

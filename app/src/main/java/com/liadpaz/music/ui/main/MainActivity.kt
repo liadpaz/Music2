@@ -1,96 +1,62 @@
 package com.liadpaz.music.ui.main
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import android.media.AudioManager
 import android.os.Bundle
+import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.view.View
-import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.LinearLayout
+import android.widget.SeekBar
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.core.content.ContextCompat
-import androidx.core.view.marginBottom
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.observe
 import androidx.navigation.findNavController
-import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.navigation.ui.setupWithNavController
+import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.liadpaz.music.R
 import com.liadpaz.music.databinding.ActivityMainBinding
+import com.liadpaz.music.ui.adapters.ExtendedSongViewPagerAdapter
 import com.liadpaz.music.ui.viewmodels.MainViewModel
 import com.liadpaz.music.ui.viewmodels.PlayingViewModel
 import com.liadpaz.music.utils.InjectorUtils
+import com.liadpaz.music.utils.extensions.findDarkColor
 
 class MainActivity : AppCompatActivity() {
 
-    private val bottomSheetBehaviorCallback = object : BottomSheetBehavior.BottomSheetCallback() {
-        override fun onSlide(bottomSheet: View, slideOffset: Float) {
-            if (slideOffset >= 0) {
-                binding.bottomNavView.translationY =
-                    binding.bottomNavView.measuredHeightAndState * slideOffset
+    private var smoothScroll = false
 
-            }
-            binding.coordinatorLayout.also {
-                val layoutParams = FrameLayout.LayoutParams(it.layoutParams)
-                layoutParams.bottomMargin = binding.bottomNavView.measuredHeightAndState - binding.bottomNavView.translationY.toInt()
-                it.layoutParams = layoutParams
-            }
-//            binding.coordinatorLayout.layoutParams =
-//                ConstraintLayout.LayoutParams(binding.coordinatorLayout.layoutParams).also {
-//                    it.bottomMargin =
-//
-//                    Log.d(TAG, "onSlide: ${it.bottomMargin}")
-//                }
-        }
+    private lateinit var bottomSheet: BottomSheetBehavior<MotionLayout>
 
-        override fun onStateChanged(bottomSheet: View, newState: Int) {
-            if (newState == BottomSheetBehavior.STATE_HIDDEN) {
-                when (playingViewModel.playbackState.value?.state) {
-                    PlaybackStateCompat.STATE_NONE,
-                    PlaybackStateCompat.STATE_STOPPED -> Unit
-                    else -> viewModel.stop()
-                }
-            } else if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
-                binding.coordinatorLayout.also {
-                    val layoutParams = FrameLayout.LayoutParams(it.layoutParams)
-                    layoutParams.bottomMargin = binding.bottomNavView.measuredHeightAndState
-                    it.layoutParams = layoutParams
-                }
-                Log.d(TAG, "onStateChanged: ${binding.coordinatorLayout.marginBottom} ${binding.coordinatorLayout.measuredHeightAndState}")
-//                binding.coordinatorLayout.layoutParams =
-//                    RelativeLayout.LayoutParams(binding.coordinatorLayout.layoutParams).also {
-//                        it.bottomMargin = binding.bottomNavView.measuredHeightAndState
-//                    }
-                binding.bottomNavView.translationY = 0F
-            }
-        }
+    private val playingViewModel by viewModels<PlayingViewModel> {
+        InjectorUtils.providePlayingViewModelFactory(application)
     }
-    private lateinit var bottomSheetBehavior: BottomSheetBehavior<LinearLayout>
+    private val viewModel by viewModels<MainViewModel> {
+        InjectorUtils.provideMainViewModelFactory(applicationContext)
+    }
+    lateinit var binding: ActivityMainBinding
 
-    private lateinit var playingViewModel: PlayingViewModel
-    private lateinit var viewModel: MainViewModel
-    private lateinit var binding: ActivityMainBinding
-
+    @SuppressLint("SwitchIntDef")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(ActivityMainBinding.inflate(layoutInflater).also { binding = it }.root)
         setSupportActionBar(binding.toolbarMain)
 
-        playingViewModel =
-            ViewModelProvider(viewModelStore, InjectorUtils.providePlayingViewModelFactory(application))[PlayingViewModel::class.java]
-        viewModel =
-            ViewModelProvider(viewModelStore, InjectorUtils.provideMainViewModelFactory(applicationContext))[MainViewModel::class.java]
+        volumeControlStream = AudioManager.STREAM_MUSIC
 
         val navController = findNavController(R.id.nav_host_fragment)
 
-        binding.bottomNavView.setupWithNavController(navController)
-        setupActionBarWithNavController(navController)
-
-        bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheet).apply {
-            addBottomSheetCallback(bottomSheetBehaviorCallback)
+        navController.addOnDestinationChangedListener { _, destination, arguments ->
+            supportActionBar?.title = when (destination.id) {
+                R.id.artistFragment -> arguments?.getParcelable<MediaBrowserCompat.MediaItem>("artist")?.description?.subtitle
+                R.id.albumFragment -> arguments?.getParcelable<MediaBrowserCompat.MediaItem>("album")?.description?.description
+                else -> getString(R.string.app_name)
+            }
         }
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED && ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
@@ -102,36 +68,95 @@ class MainActivity : AppCompatActivity() {
         binding.lifecycleOwner = this
         binding.viewModel = playingViewModel
 
-        binding.layoutNowPlaying.root.setOnClickListener {
-            bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+        binding.tvSongTitle.isSelected = true
+        binding.tvSongArtist.isSelected = true
+
+        playingViewModel.queue.observe(this) {
+            Log.d(TAG, "onViewCreated: QUEUE CHANGED WTF??!?!")
+//            smoothScroll = false
+            binding.viewPager.adapter = ExtendedSongViewPagerAdapter(this)
+            binding.viewPager.setCurrentItem(playingViewModel.queuePosition.value ?: 0, false)
+        }
+        playingViewModel.queuePosition.observe(this) {
+            binding.viewPager.setCurrentItem(it, smoothScroll)
+            smoothScroll = true
         }
 
-        binding.layoutNowPlaying.tvSongTitle.isSelected = true
+        binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                if (smoothScroll) {
+                    playingViewModel.skipToQueueItem(position)
+                } else {
+                    smoothScroll = true
+                }
+            }
+        })
 
-        Log.d(TAG, "onCreate: coordinatorLayout width: ${binding.coordinatorLayout.measuredWidthAndState}")
+        binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, position: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    playingViewModel.seekTo(seekBar.progress * 1000L)
+                }
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
+
+            override fun onStopTrackingTouch(seekBar: SeekBar) = Unit
+        })
 
         playingViewModel.playbackState.observe(this) { playback: PlaybackStateCompat ->
             when (playback.state) {
                 PlaybackStateCompat.STATE_BUFFERING,
                 PlaybackStateCompat.STATE_PLAYING -> {
-                    if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_HIDDEN) {
-                        binding.coordinatorLayout.also {
-                            val layoutParams = FrameLayout.LayoutParams(it.layoutParams)
-                            layoutParams.bottomMargin = binding.bottomNavView.measuredHeightAndState
-                            it.layoutParams = layoutParams
-                        }
-//                        binding.coordinatorLayout.layoutParams =
-//                            ConstraintLayout.LayoutParams(binding.coordinatorLayout.layoutParams).also {
-//                                it.bottomMargin = binding.bottomNavView.measuredHeightAndState
-//                            }
-                        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                    if (bottomSheetState == BottomSheetBehavior.STATE_HIDDEN) {
+                        bottomSheetState = BottomSheetBehavior.STATE_COLLAPSED
                     }
                 }
                 PlaybackStateCompat.STATE_NONE,
                 PlaybackStateCompat.STATE_STOPPED -> {
-                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+                    bottomSheetState = BottomSheetBehavior.STATE_HIDDEN
                 }
             }
+        }
+
+        playingViewModel.mediaMetadata.observe(this) {
+            binding.bottomSheet.background =
+                GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(it.color.getDominantColor(Color.GRAY), it.color.findDarkColor()))
+            binding.seekBar.max = it.duration.toInt() / 1000
+            binding.tvDuration.text =
+                PlayingViewModel.NowPlayingMetadata.timestampToMSS(it.duration)
+        }
+        playingViewModel.mediaPosition.observe(this) {
+            binding.seekBar.progress = (it / 1000.0).toInt()
+            binding.tvElapsedTime.text = PlayingViewModel.NowPlayingMetadata.timestampToMSS(it)
+        }
+
+        bottomSheet = BottomSheetBehavior.from(binding.bottomSheet).also {
+            it.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+                override fun onStateChanged(bottomSheet: View, newState: Int) {
+                    when (newState) {
+                        BottomSheetBehavior.STATE_COLLAPSED -> {
+                            binding.viewPager.isUserInputEnabled = false
+                            binding.bottomSheet.setOnClickListener {
+                                bottomSheetState = BottomSheetBehavior.STATE_EXPANDED
+                            }
+                        }
+                        BottomSheetBehavior.STATE_EXPANDED -> {
+                            binding.viewPager.isUserInputEnabled = true
+                            binding.bottomSheet.setOnClickListener { }
+                        }
+                        BottomSheetBehavior.STATE_HIDDEN -> {
+                            playingViewModel.stop()
+                        }
+                    }
+                }
+
+                override fun onSlide(bottomSheet: View, slideOffset: Float) {
+                    if (slideOffset > 0) {
+                        binding.bottomSheet.progress = slideOffset
+                    }
+                }
+            })
         }
     }
 
@@ -145,12 +170,19 @@ class MainActivity : AppCompatActivity() {
         findNavController(R.id.nav_host_fragment).navigateUp()
 
     override fun onBackPressed() {
-        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
-            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        if (bottomSheetState == BottomSheetBehavior.STATE_EXPANDED) {
+            bottomSheetState = BottomSheetBehavior.STATE_COLLAPSED
         } else {
             super.onBackPressed()
         }
     }
+
+    @BottomSheetBehavior.State
+    private var bottomSheetState: Int
+        get() = bottomSheet.state
+        set(value) {
+            bottomSheet.state = value
+        }
 }
 
 private const val TAG = "MainActivityLog"

@@ -194,9 +194,14 @@ class MusicService : MediaBrowserServiceCompat() {
         }
 
         override fun onTimelineChanged(timeline: Timeline, @Player.TimelineChangeReason reason: Int) {
-            if (reason == Player.TIMELINE_CHANGE_REASON_PREPARED) {
+            if (reason == Player.TIMELINE_CHANGE_REASON_PREPARED || reason == Player.TIMELINE_CHANGE_REASON_DYNAMIC) {
                 exoPlayer.playWhenReady = true
             }
+        }
+
+        override fun onPositionDiscontinuity(reason: Int) {
+            super.onPositionDiscontinuity(reason)
+            repository.setQueuePosition(exoPlayer.currentWindowIndex)
         }
 
         override fun onPlayerError(error: ExoPlaybackException) {
@@ -226,15 +231,11 @@ class MusicService : MediaBrowserServiceCompat() {
                     Log.e(TAG, "TYPE_REMOTE: " + error.message)
                 }
             }
-            Toast.makeText(
-                applicationContext,
-                message,
-                Toast.LENGTH_LONG
-            ).show()
+            Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
         }
     }
 
-    private inner class QueueNavigator(mediaSession: MediaSessionCompat) : TimelineQueueNavigator(mediaSession) {
+    private inner class QueueNavigator(mediaSession: MediaSessionCompat) : TimelineQueueNavigator(mediaSession, 1000) {
         private val window = Timeline.Window()
         override fun getMediaDescription(player: Player, windowIndex: Int): MediaDescriptionCompat =
             player.currentTimeline.getWindow(windowIndex, window).tag as MediaDescriptionCompat

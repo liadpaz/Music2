@@ -8,4 +8,5 @@
     <string name="notification_channel_description">מראה איזה מוזיקה מתנגנת</string>
     <string name="item_artist_songs">%d שירים</string>
     <string name="nav_album">אלבום</string>
+    <string name="description_more">הצג יותר אפשרויות</string>
 </resources>

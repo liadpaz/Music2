@@ -35,13 +35,13 @@ fun setUri(imageView: ImageView, uri: Uri?) {
 
 @BindingAdapter("playPause")
 fun setPlayPause(imageButton: ImageButton, playbackState: PlaybackStateCompat?) {
-    imageButton.setImageResource(
+    GlideApp.with(imageButton).load(
         when (playbackState?.state) {
             PlaybackStateCompat.STATE_BUFFERING,
             PlaybackStateCompat.STATE_PLAYING -> R.drawable.ic_notification_pause
             else -> R.drawable.ic_notification_play
         }
-    )
+    ).into(imageButton)
 }
 
 @BindingAdapter("artistSongs")

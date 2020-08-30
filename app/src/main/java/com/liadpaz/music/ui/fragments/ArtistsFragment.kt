@@ -4,10 +4,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
+import com.liadpaz.music.R
 import com.liadpaz.music.databinding.FragmentArtistsBinding
 import com.liadpaz.music.ui.adapters.ArtistsAdapter
 import com.liadpaz.music.ui.utils.ItemOffsetDecoration
@@ -29,9 +31,11 @@ class ArtistsFragment : Fragment() {
         binding.viewModel = viewModel
 
         binding.rvArtists.adapter = ArtistsAdapter { mediaItem ->
-            findNavController().navigate(ArtistsFragmentDirections.actionArtistsFragmentToArtistFragment(mediaItem))
+            findNavController().navigate(MainFragmentDirections.actionMainFragmentToArtistFragment(mediaItem))
         }
         binding.rvArtists.layoutManager = GridLayoutManager(requireContext(), 3)
         binding.rvArtists.addItemDecoration(ItemOffsetDecoration(16))
+
+        binding.rvArtists.updatePadding(bottom = requireActivity().resources.let { it.getDimensionPixelSize(it.getIdentifier("navigation_bar_height", "dimen", "android")) + it.getDimension(R.dimen.bottomSheetHeight).toInt() })
     }
 }

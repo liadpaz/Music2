@@ -18,9 +18,10 @@
             android:id="@+id/rvSongs"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:paddingBottom="@dimen/bottomSheetHeight"
+            android:clipToPadding="false"
             android:orientation="vertical"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:songs="@{viewModel.songs}" />
-
     </FrameLayout>
 </layout>

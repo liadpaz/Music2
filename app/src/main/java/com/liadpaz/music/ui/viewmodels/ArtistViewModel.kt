@@ -29,7 +29,7 @@ class ArtistViewModel(private val serviceConnection: ServiceConnection, private 
     val songs: LiveData<List<MediaBrowserCompat.MediaItem>> = _songs
 
     fun play(mediaItem: MediaBrowserCompat.MediaItem) =
-        serviceConnection.transportControls.playFromMediaId(mediaItem.mediaId, bundleOf(EXTRA_FROM to EXTRA_FROM_ARTISTS, EXTRA_ARTIST to artist))
+        serviceConnection.transportControls?.playFromMediaId(mediaItem.mediaId, bundleOf(EXTRA_FROM to EXTRA_FROM_ARTISTS, EXTRA_ARTIST to artist))
 
     override fun onCleared() {
         serviceConnection.unsubscribe(artist, subscriptionCallback)

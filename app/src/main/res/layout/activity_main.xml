@@ -13,71 +13,44 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fitsSystemWindows="false"
-        tools:context=".ui.main.MainActivity">
+        android:fitsSystemWindows="false">
 
         <LinearLayout
+            android:id="@+id/mainContent"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <LinearLayout
-                android:id="@+id/mainContent"
+            <com.google.android.material.appbar.AppBarLayout
+                android:id="@+id/appBarMain"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/colorPrimary"
+                android:fitsSystemWindows="true">
+
+                <com.google.android.material.appbar.MaterialToolbar
+                    android:id="@+id/toolbarMain"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize" />
+            </com.google.android.material.appbar.AppBarLayout>
+
+            <fragment
+                android:id="@+id/nav_host_fragment"
+                android:name="androidx.navigation.fragment.NavHostFragment"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:orientation="vertical"
-                app:layout_constraintBottom_toTopOf="@id/bottomNavView"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <com.google.android.material.appbar.AppBarLayout
-                    android:id="@+id/appBarMain"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/colorPrimary"
-                    android:fitsSystemWindows="true">
-
-                    <com.google.android.material.appbar.MaterialToolbar
-                        android:id="@+id/toolbarMain"
-                        android:layout_width="match_parent"
-                        android:layout_height="?attr/actionBarSize" />
-                </com.google.android.material.appbar.AppBarLayout>
-
-                <fragment
-                    android:id="@+id/nav_host_fragment"
-                    android:name="androidx.navigation.fragment.NavHostFragment"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
-                    app:defaultNavHost="true"
-                    app:navGraph="@navigation/main_nav_graph"
-                    tools:ignore="FragmentTagUsage" />
-            </LinearLayout>
-
-            <com.google.android.material.bottomnavigation.BottomNavigationView
-                android:id="@+id/bottomNavView"
-                style="@style/Widget.MaterialComponents.BottomNavigationView.Colored"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:fitsSystemWindows="true"
-                app:labelVisibilityMode="labeled"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:menu="@menu/menu_bottom_nav" />
-
+                app:defaultNavHost="true"
+                app:navGraph="@navigation/main_nav_graph"
+                tools:ignore="FragmentTagUsage" />
         </LinearLayout>
 
         <androidx.coordinatorlayout.widget.CoordinatorLayout
             android:id="@+id/coordinatorLayout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginBottom="?attr/actionBarSize">
+            android:layout_height="match_parent">
 
-            <LinearLayout
+            <androidx.constraintlayout.motion.widget.MotionLayout
                 android:id="@+id/bottomSheet"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -85,23 +58,152 @@
                 android:orientation="vertical"
                 app:behavior_hideable="true"
                 app:behavior_peekHeight="@dimen/bottomSheetHeight"
-                app:behavior_skipCollapsed="false"
+                app:layoutDescription="@xml/activity_main_scene"
                 app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
-                <include
-                    android:id="@+id/layoutNowPlaying"
-                    layout="@layout/layout_now_playing"
-                    android:layout_width="match_parent"
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/guideline4"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    app:viewModel="@{viewModel}" />
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_begin="@dimen/bottomSheetHeight" />
 
-                <androidx.fragment.app.FragmentContainerView
-                    android:id="@+id/topBottomSheet"
-                    android:name="com.liadpaz.music.ui.fragments.ExtendedFragment"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-            </LinearLayout>
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/viewPager"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_margin="8dp"
+                    app:layout_constraintBottom_toBottomOf="@id/guidelineBottom"
+                    app:layout_constraintEnd_toStartOf="@+id/guideline4"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/ivArtPreview"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_margin="8dp"
+                    android:adjustViewBounds="true"
+                    android:cropToPadding="true"
+                    app:layout_constraintBottom_toTopOf="@id/guidelineBottom"
+                    app:layout_constraintEnd_toStartOf="@id/guideline4"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:uri="@{viewModel.mediaMetadata.albumArtUri}" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvSongTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:ellipsize="marquee"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:focusedByDefault="true"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:singleLine="true"
+                    android:text="@{viewModel.mediaMetadata.title}"
+                    app:layout_constraintBottom_toTopOf="@+id/tvSongArtist"
+                    app:layout_constraintEnd_toStartOf="@+id/ibPlayPause"
+                    app:layout_constraintStart_toStartOf="@+id/guideline4"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvSongArtist"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:focusedByDefault="true"
+                    android:maxLines="1"
+                    android:text="@{viewModel.mediaMetadata.artist}"
+                    app:layout_constraintBottom_toBottomOf="@id/guidelineBottom"
+                    app:layout_constraintEnd_toStartOf="@+id/ibPlayPause"
+                    app:layout_constraintStart_toStartOf="@+id/guideline4"
+                    app:layout_constraintTop_toBottomOf="@+id/tvSongTitle" />
+
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/guidelineBottom"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintGuide_begin="@dimen/bottomSheetHeight"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageButton
+                    android:id="@+id/ibPlayPause"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:adjustViewBounds="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:onClick="@{() -> viewModel.playPause()}"
+                    android:padding="8dp"
+                    app:layout_constraintBottom_toTopOf="@id/guidelineBottom"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:playPause="@{viewModel.playbackState}"
+                    app:srcCompat="@drawable/ic_notification_play" />
+
+                <androidx.appcompat.widget.AppCompatSeekBar
+                    android:id="@+id/seekBar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="32dp"
+                    android:visibility="invisible"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="parent" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvElapsedTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:visibility="invisible"
+                    app:layout_constraintStart_toStartOf="@id/seekBar"
+                    app:layout_constraintTop_toBottomOf="@id/seekBar" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvDuration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:visibility="invisible"
+                    app:layout_constraintEnd_toEndOf="@id/seekBar"
+                    app:layout_constraintTop_toBottomOf="@id/seekBar" />
+
+                <ImageButton
+                    android:id="@+id/ibSkipPrev"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:onClick="@{() -> viewModel.skipToPrev()}"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_skip_previous"
+                    android:visibility="invisible"
+                    app:layout_constraintEnd_toStartOf="@id/ibPlayPause"
+                    app:layout_constraintStart_toStartOf="@id/seekBar"
+                    app:layout_constraintTop_toBottomOf="@id/seekBar" />
+
+                <ImageButton
+                    android:id="@+id/ibSkipNext"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:onClick="@{() -> viewModel.skipToNext()}"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_skip_next"
+                    android:visibility="invisible"
+                    app:layout_constraintEnd_toEndOf="@id/seekBar"
+                    app:layout_constraintStart_toEndOf="@id/ibPlayPause"
+                    app:layout_constraintTop_toBottomOf="@id/seekBar" />
+            </androidx.constraintlayout.motion.widget.MotionLayout>
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
-
     </FrameLayout>
 </layout>

@@ -24,6 +24,5 @@
             android:paddingBottom="@dimen/bottomSheetHeight"
             app:albums="@{viewModel.albums}"
             app:layoutManager="androidx.recyclerview.widget.GridLayoutManager" />
-
     </FrameLayout>
 </layout>
