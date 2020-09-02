@@ -13,6 +13,7 @@ import android.util.Log
 import android.view.View
 import android.widget.SeekBar
 import androidx.activity.viewModels
+import androidx.annotation.ColorInt
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.core.content.ContextCompat
@@ -47,10 +48,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(ActivityMainBinding.inflate(layoutInflater).also { binding = it }.root)
         setSupportActionBar(binding.toolbarMain)
 
+        // sets the volume control on the app to 'STREAM_MUSIC'
         volumeControlStream = AudioManager.STREAM_MUSIC
 
         val navController = findNavController(R.id.nav_host_fragment)
 
+        // control the title of the action bar, it depends on the destination of the navigation component
         navController.addOnDestinationChangedListener { _, destination, arguments ->
             supportActionBar?.title = when (destination.id) {
                 R.id.artistFragment -> arguments?.getParcelable<MediaBrowserCompat.MediaItem>("artist")?.description?.subtitle
@@ -65,21 +68,31 @@ class MainActivity : AppCompatActivity() {
             viewModel.onPermissionGranted()
         }
 
+        // bind the lifecycle owner of the layout & the view model
         binding.lifecycleOwner = this
         binding.viewModel = playingViewModel
 
+        // select the song title & song artist in order for the marquee to work
         binding.tvSongTitle.isSelected = true
         binding.tvSongArtist.isSelected = true
 
+        // set the bottom guideline on the top of the navigation bar
+        binding.guidelineBottomScreen.setGuidelineEnd(resources.getDimensionPixelSize(resources.getIdentifier("navigation_bar_height", "dimen", "android")))
+        binding.guidelineTopScreen.setGuidelineBegin(resources.getDimensionPixelSize(resources.getIdentifier("status_bar_height", "dimen", "android")))
+
         playingViewModel.queue.observe(this) {
             Log.d(TAG, "onViewCreated: QUEUE CHANGED WTF??!?!")
-//            smoothScroll = false
+            smoothScroll = false
             binding.viewPager.adapter = ExtendedSongViewPagerAdapter(this)
             binding.viewPager.setCurrentItem(playingViewModel.queuePosition.value ?: 0, false)
         }
         playingViewModel.queuePosition.observe(this) {
             binding.viewPager.setCurrentItem(it, smoothScroll)
             smoothScroll = true
+        }
+
+        binding.ibDown.setOnClickListener {
+            bottomSheetState = BottomSheetBehavior.STATE_COLLAPSED
         }
 
         binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
@@ -120,9 +133,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         playingViewModel.mediaMetadata.observe(this) {
+            // set bottomsheet background
             binding.bottomSheet.background =
-                GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(it.color.getDominantColor(Color.GRAY), it.color.findDarkColor()))
+                GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(it.palette.getDominantColor(Color.GRAY), it.palette.findDarkColor()))
+            // set the top buttons (on the bottom sheet) color
+            setTopButtonsColor(it.palette.dominantSwatch!!.bodyTextColor)
+            // set seek bar max progress
             binding.seekBar.max = it.duration.toInt() / 1000
+            // set the duration textview to the duration of the media item
             binding.tvDuration.text =
                 PlayingViewModel.NowPlayingMetadata.timestampToMSS(it.duration)
         }
@@ -175,6 +193,11 @@ class MainActivity : AppCompatActivity() {
         } else {
             super.onBackPressed()
         }
+    }
+
+    private fun setTopButtonsColor(@ColorInt color: Int) {
+        binding.ibDown.setColorFilter(color)
+        binding.ibMore.setColorFilter(color)
     }
 
     @BottomSheetBehavior.State

@@ -4,7 +4,9 @@ import android.content.Context
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import java.text.FieldPosition
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class Repository private constructor(private val context: Context) {
 
@@ -25,6 +27,15 @@ class Repository private constructor(private val context: Context) {
         }
     }
 
+    fun setQueue(queue: List<MediaSessionCompat.QueueItem>) =
+        CoroutineScope(Dispatchers.Default).launch {
+            queue.let {
+                if (!it.contentEquals(_queue.value)) {
+                    _queue.postValue(queue)
+                }
+            }
+        }
+
     fun setPermissionGranted(granted: Boolean) = _granted.postValue(granted)
 
     companion object {
@@ -36,3 +47,20 @@ class Repository private constructor(private val context: Context) {
         }
     }
 }
+
+fun List<MediaSessionCompat.QueueItem>?.contentEquals(other: List<MediaSessionCompat.QueueItem>?): Boolean {
+    if (this == null || other == null) {
+        return this == other
+    }
+    if (this.size != other.size) return false
+
+    forEachIndexed { index, any ->
+        if (other[index].description != any.description || other[index].queueId != any.queueId) {
+            return false
+        }
+    }
+
+    return true
+}
+
+private const val TAG = "Repository"

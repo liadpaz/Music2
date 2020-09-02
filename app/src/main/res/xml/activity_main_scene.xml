@@ -6,13 +6,13 @@
         <Constraint android:id="@+id/tvSongTitle">
             <CustomAttribute
                 app:attributeName="textSize"
-                app:customFloatValue="14" />
+                app:customFloatValue="18" />
         </Constraint>
 
         <Constraint android:id="@+id/tvSongArtist">
             <CustomAttribute
                 app:attributeName="textSize"
-                app:customFloatValue="14" />
+                app:customFloatValue="18" />
         </Constraint>
     </ConstraintSet>
 
@@ -22,38 +22,40 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
-            android:layout_marginTop="32dp"
             android:layout_marginEnd="32dp"
-            android:layout_marginBottom="160dp"
             android:alpha="0"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/tvSongTitle"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/guidelineTopScreen"
+            app:layout_constraintVertical_bias="0.7" />
 
         <Constraint
             android:id="@+id/viewPager"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="128dp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/tvSongTitle"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/guidelineTopScreen"
+            app:layout_constraintVertical_bias="0.7" />
 
         <Constraint
             android:id="@+id/tvSongTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintBottom_toTopOf="@id/tvSongArtist"
             app:layout_constraintEnd_toEndOf="@id/seekBar"
-            app:layout_constraintStart_toStartOf="@id/seekBar"
-            app:layout_constraintTop_toBottomOf="@id/viewPager">
+            app:layout_constraintStart_toStartOf="@id/seekBar">
             <CustomAttribute
                 app:attributeName="textSize"
-                app:customFloatValue="24" />
+                app:customFloatValue="22" />
+            <CustomAttribute
+                app:attributeName="textStyle"
+                app:customStringValue="bold" />
         </Constraint>
 
         <Constraint
@@ -61,33 +63,29 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintBottom_toTopOf="@id/seekBar"
             app:layout_constraintEnd_toEndOf="@id/seekBar"
-            app:layout_constraintStart_toStartOf="@id/seekBar"
-            app:layout_constraintTop_toBottomOf="@id/tvSongTitle">
-            <CustomAttribute
-                app:attributeName="textSize"
-                app:customFloatValue="18" />
-        </Constraint>
+            app:layout_constraintStart_toStartOf="@id/seekBar" />
 
         <Constraint
             android:id="@+id/seekBar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="32dp"
             android:layout_marginEnd="16dp"
+            android:layout_marginBottom="32dp"
             android:visibility="visible"
+            app:layout_constraintBottom_toTopOf="@id/ibPlayPause"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvSongArtist" />
+            app:layout_constraintStart_toStartOf="parent" />
 
         <Constraint
             android:id="@+id/tvElapsedTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="16dp"
             android:visibility="visible"
             app:layout_constraintStart_toStartOf="@id/seekBar"
             app:layout_constraintTop_toBottomOf="@id/seekBar" />
@@ -96,7 +94,7 @@
             android:id="@+id/tvDuration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
+            android:layout_marginEnd="16dp"
             android:visibility="visible"
             app:layout_constraintEnd_toEndOf="@id/seekBar"
             app:layout_constraintTop_toBottomOf="@id/seekBar" />
@@ -105,30 +103,60 @@
             android:id="@+id/ibPlayPause"
             android:layout_width="72dp"
             android:layout_height="72dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginBottom="32dp"
+            app:layout_constraintBottom_toTopOf="@id/guidelineBottomScreen"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/seekBar" />
+            app:layout_constraintStart_toStartOf="parent" />
 
         <Constraint
             android:id="@+id/ibSkipPrev"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginEnd="16dp"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="@id/ibPlayPause"
             app:layout_constraintEnd_toStartOf="@id/ibPlayPause"
-            app:layout_constraintStart_toStartOf="@id/seekBar"
             app:layout_constraintTop_toTopOf="@id/ibPlayPause" />
 
         <Constraint
             android:id="@+id/ibSkipNext"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginStart="16dp"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="@id/ibPlayPause"
-            app:layout_constraintEnd_toEndOf="@id/seekBar"
             app:layout_constraintStart_toEndOf="@id/ibPlayPause"
             app:layout_constraintTop_toTopOf="@id/ibPlayPause" />
+
+        <Constraint
+            android:id="@+id/ibRepeat"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="@id/ibPlayPause"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/ibSkipNext"
+            app:layout_constraintTop_toTopOf="@id/ibPlayPause" />
+
+        <Constraint
+            android:id="@+id/ibDown"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:visibility="visible"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/guidelineTopScreen" />
+
+        <Constraint
+            android:id="@+id/ibMore"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:visibility="visible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/guidelineTopScreen" />
     </ConstraintSet>
 
     <Transition
@@ -136,9 +164,9 @@
         app:constraintSetStart="@+id/start">
         <KeyFrameSet>
             <KeyAttribute
-                app:motionTarget="@id/ivArtPreview"
+                android:alpha="1"
                 app:framePosition="99"
-                android:alpha="1"/>
+                app:motionTarget="@id/ivArtPreview" />
         </KeyFrameSet>
     </Transition>
 </MotionScene>

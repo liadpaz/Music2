@@ -54,7 +54,6 @@
                 android:id="@+id/bottomSheet"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="?attr/colorPrimaryDark"
                 android:orientation="vertical"
                 app:behavior_hideable="true"
                 app:behavior_peekHeight="@dimen/bottomSheetHeight"
@@ -91,17 +90,18 @@
                     app:layout_constraintTop_toTopOf="parent"
                     app:uri="@{viewModel.mediaMetadata.albumArtUri}" />
 
-                <com.google.android.material.textview.MaterialTextView
+                <TextView
                     android:id="@+id/tvSongTitle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_marginEnd="8dp"
                     android:ellipsize="marquee"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:focusedByDefault="true"
+                    android:focusable="false"
+                    android:focusableInTouchMode="false"
+                    android:focusedByDefault="false"
                     android:marqueeRepeatLimit="marquee_forever"
+                    android:scrollHorizontally="true"
                     android:singleLine="true"
                     android:text="@{viewModel.mediaMetadata.title}"
                     app:layout_constraintBottom_toTopOf="@+id/tvSongArtist"
@@ -109,16 +109,19 @@
                     app:layout_constraintStart_toStartOf="@+id/guideline4"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <com.google.android.material.textview.MaterialTextView
+                <TextView
                     android:id="@+id/tvSongArtist"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_marginEnd="8dp"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:focusedByDefault="true"
-                    android:maxLines="1"
+                    android:ellipsize="marquee"
+                    android:focusable="false"
+                    android:focusableInTouchMode="false"
+                    android:focusedByDefault="false"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:scrollHorizontally="true"
+                    android:singleLine="true"
                     android:text="@{viewModel.mediaMetadata.artist}"
                     app:layout_constraintBottom_toBottomOf="@id/guidelineBottom"
                     app:layout_constraintEnd_toStartOf="@+id/ibPlayPause"
@@ -140,7 +143,6 @@
                     android:layout_marginTop="8dp"
                     android:layout_marginEnd="8dp"
                     android:layout_marginBottom="8dp"
-                    android:adjustViewBounds="true"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:onClick="@{() -> viewModel.playPause()}"
                     android:padding="8dp"
@@ -160,49 +162,103 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="parent" />
 
-                <com.google.android.material.textview.MaterialTextView
+                <TextView
                     android:id="@+id/tvElapsedTime"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="16dp"
+                    android:focusable="false"
+                    android:focusableInTouchMode="false"
+                    android:focusedByDefault="false"
                     android:visibility="invisible"
                     app:layout_constraintStart_toStartOf="@id/seekBar"
                     app:layout_constraintTop_toBottomOf="@id/seekBar" />
 
-                <com.google.android.material.textview.MaterialTextView
+                <TextView
                     android:id="@+id/tvDuration"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:focusable="false"
+                    android:focusableInTouchMode="false"
+                    android:focusedByDefault="false"
                     android:visibility="invisible"
                     app:layout_constraintEnd_toEndOf="@id/seekBar"
                     app:layout_constraintTop_toBottomOf="@id/seekBar" />
 
                 <ImageButton
                     android:id="@+id/ibSkipPrev"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:onClick="@{() -> viewModel.skipToPrev()}"
                     android:padding="8dp"
                     android:src="@drawable/ic_skip_previous"
                     android:visibility="invisible"
-                    app:layout_constraintEnd_toStartOf="@id/ibPlayPause"
                     app:layout_constraintStart_toStartOf="@id/seekBar"
                     app:layout_constraintTop_toBottomOf="@id/seekBar" />
 
                 <ImageButton
                     android:id="@+id/ibSkipNext"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:onClick="@{() -> viewModel.skipToNext()}"
                     android:padding="8dp"
                     android:src="@drawable/ic_skip_next"
                     android:visibility="invisible"
                     app:layout_constraintEnd_toEndOf="@id/seekBar"
-                    app:layout_constraintStart_toEndOf="@id/ibPlayPause"
                     app:layout_constraintTop_toBottomOf="@id/seekBar" />
+
+                <ImageButton
+                    android:id="@+id/ibRepeat"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:background="?selectableItemBackgroundBorderless"
+                    android:onClick="@{() -> viewModel.toggleRepeatMode()}"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_repeat"
+                    android:visibility="invisible"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@id/ibSkipNext"
+                    app:layout_constraintTop_toBottomOf="@id/seekBar"
+                    app:repeatMode="@{viewModel.repeatMode}" />
+
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/guidelineTopScreen"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:orientation="horizontal" />
+
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/guidelineBottomScreen"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:orientation="horizontal" />
+
+                <ImageButton
+                    android:id="@+id/ibDown"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_margin="8dp"
+                    android:background="?selectableItemBackgroundBorderless"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_drop_down"
+                    android:visibility="invisible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <ImageButton
+                    android:id="@+id/ibMore"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_margin="8dp"
+                    android:background="?selectableItemBackgroundBorderless"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_more"
+                    android:visibility="invisible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
             </androidx.constraintlayout.motion.widget.MotionLayout>
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
     </FrameLayout>

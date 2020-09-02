@@ -5,7 +5,7 @@ import android.net.Uri
 import android.support.v4.media.MediaBrowserCompat.MediaItem
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
-import com.google.android.exoplayer2.source.ConcatenatingMediaSource
+import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DataSource
 
@@ -192,12 +192,12 @@ inline val MediaMetadataCompat.fullDescription: MediaDescriptionCompat
 fun MediaMetadataCompat.toMediaSource(dataSourceFactory: DataSource.Factory): ProgressiveMediaSource =
     ProgressiveMediaSource.Factory(dataSourceFactory).setTag(fullDescription).createMediaSource(mediaUri)
 
-fun List<MediaMetadataCompat>.toMediaSource(dataSourceFactory: DataSource.Factory): ConcatenatingMediaSource {
-    val concatenatingMediaSource = ConcatenatingMediaSource()
+fun List<MediaMetadataCompat>.toMediaSources(dataSourceFactory: DataSource.Factory): List<MediaSource> {
+    val mediaSources = mutableListOf<MediaSource>()
     forEach {
-        concatenatingMediaSource.addMediaSource(it.toMediaSource(dataSourceFactory))
+        mediaSources.add(it.toMediaSource(dataSourceFactory))
     }
-    return concatenatingMediaSource
+    return mediaSources
 }
 
 const val METADATA_KEY_FLAGS = "com.liadpaz.music.service.METADATA_KEY_FLAGS"

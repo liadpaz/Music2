@@ -12,6 +12,11 @@ import java.util.*
 class BrowseTree(context: Context, musicSource: MusicSource) {
     private val mediaIdToChildren = mutableMapOf<String, MutableList<MediaMetadataCompat>>()
 
+    private val songs = mutableListOf<MediaMetadataCompat>()
+    private val playlists = mutableMapOf<String, MutableList<MediaMetadataCompat>>()
+    private val albums = mutableMapOf<String, MutableList<MediaMetadataCompat>>()
+    private val artists = mutableMapOf<String, MutableList<MediaMetadataCompat>>()
+
     init {
         val rootList = mediaIdToChildren[ROOT] ?: mutableListOf()
 

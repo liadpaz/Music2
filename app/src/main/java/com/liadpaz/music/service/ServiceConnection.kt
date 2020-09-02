@@ -9,9 +9,7 @@ import android.os.ResultReceiver
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
-import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.liadpaz.music.utils.extensions.id
@@ -27,8 +25,10 @@ class ServiceConnection private constructor(context: Context, serviceComponent: 
     val nowPlaying = MutableLiveData<MediaMetadataCompat>()
         .apply { postValue(NOTHING_PLAYING) }
 
-    private val _queue = MutableLiveData<List<MediaSessionCompat.QueueItem>>()
-    val queue: LiveData<List<MediaSessionCompat.QueueItem>> = _queue
+    private val _repeatMode = MutableLiveData<@PlaybackStateCompat.RepeatMode Int>().apply {
+        postValue(PlaybackStateCompat.REPEAT_MODE_ALL)
+    }
+    val repeatMode: LiveData<Int> = _repeatMode
 
     val transportControls: MediaControllerCompat.TransportControls?
         get() = mediaController?.transportControls
@@ -94,15 +94,10 @@ class ServiceConnection private constructor(context: Context, serviceComponent: 
                 }
             )
 
-        override fun onQueueChanged(queue: MutableList<MediaSessionCompat.QueueItem>?) {
-            if (!queue.contentEquals(_queue.value)) {
-                _queue.postValue(queue)
-            }
-        }
+        override fun onRepeatModeChanged(repeatMode: Int) = _repeatMode.postValue(repeatMode)
 
-        override fun onSessionDestroyed() {
+        override fun onSessionDestroyed() =
             mediaBrowserConnectionCallback.onConnectionSuspended()
-        }
     }
 
     companion object {
@@ -124,21 +119,5 @@ val NOTHING_PLAYING: MediaMetadataCompat = MediaMetadataCompat.Builder()
     .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, "")
     .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, 0)
     .build()
-
-fun List<Any>?.contentEquals(other: List<Any>?): Boolean {
-    if (this == null || other == null) {
-        Log.d(TAG, "contentEquals: "); return this == other
-    }
-    if (this.size != other.size) return false
-
-    forEachIndexed { index, any ->
-        Log.d(TAG, "contentEquals:\n$any\n${other[index]}")
-        if (other[index] != any) {
-            return false
-        }
-    }
-
-    return true
-}
 
 private const val TAG = "ServiceConnection"

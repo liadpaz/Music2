@@ -25,7 +25,7 @@ import kotlin.math.floor
 
 class PlayingViewModel(app: Application, private val serviceConnection: ServiceConnection, private val repository: Repository) : AndroidViewModel(app) {
 
-    data class NowPlayingMetadata(val id: String, val albumArtUri: Uri, val title: String?, val artist: String?, val duration: Long, val color: Palette) {
+    data class NowPlayingMetadata(val id: String, val albumArtUri: Uri, val title: String?, val artist: String?, val duration: Long, val palette: Palette) {
 
         companion object {
             fun timestampToMSS(position: Long): String {
@@ -48,8 +48,9 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
     val playbackState: LiveData<PlaybackStateCompat> = _playbackState
     val mediaMetadata: LiveData<NowPlayingMetadata> = _mediaMetadata
     val mediaPosition: LiveData<Long> = _mediaPosition
-    val queue = serviceConnection.queue
+    val queue = repository.queue
     val queuePosition: LiveData<Int> = repository.queuePosition
+    val repeatMode: LiveData<Int> = serviceConnection.repeatMode
 
     private var updatePosition = true
     private val handler = Handler(Looper.getMainLooper())
@@ -77,6 +78,8 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
     fun skipToQueueItem(position: Int) =
         serviceConnection.transportControls?.skipToQueueItem(position.toLong())
 
+    fun toggleRepeatMode() =
+        serviceConnection.transportControls?.setRepeatMode(if (serviceConnection.repeatMode.value == PlaybackStateCompat.REPEAT_MODE_ALL) PlaybackStateCompat.REPEAT_MODE_ONE else PlaybackStateCompat.REPEAT_MODE_ALL)
 
     fun skipToPrev() = serviceConnection.transportControls?.skipToPrevious()
 
@@ -103,7 +106,7 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
         if (mediaMetadata.duration != 0L && mediaMetadata.id != null) {
             CoroutineScope(Dispatchers.IO).launch {
                 _mediaMetadata.postValue(
-                    NowPlayingMetadata(
+                    PlayingViewModel.NowPlayingMetadata(
                         mediaMetadata.id!!,
                         mediaMetadata.albumArtUri,
                         mediaMetadata.title?.trim(),

@@ -9,12 +9,12 @@ import com.google.android.exoplayer2.ControlDispatcher
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
+import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.liadpaz.music.service.utils.MusicSource
 import com.liadpaz.music.utils.extensions.*
-import kotlinx.coroutines.flow.asFlow
 
-class PlaybackPreparer(private val musicSource: MusicSource, private val exoPlayer: ExoPlayer, private val dataSourceFactory: DefaultDataSourceFactory) : MediaSessionConnector.PlaybackPreparer {
+class PlaybackPreparer(private val musicSource: MusicSource, private val exoPlayer: ExoPlayer, private val mediaSource: ConcatenatingMediaSource, private val dataSourceFactory: DefaultDataSourceFactory) : MediaSessionConnector.PlaybackPreparer {
 
     override fun getSupportedPrepareActions(): Long =
         PlaybackStateCompat.ACTION_PREPARE_FROM_MEDIA_ID or
@@ -37,7 +37,8 @@ class PlaybackPreparer(private val musicSource: MusicSource, private val exoPlay
                 EXTRA_FROM_ARTISTS -> buildPlaylistWithArtist(extras[EXTRA_ARTIST] as String).apply { if (shuffle) shuffled() }
                 else ->  musicSource.toList().apply { if (shuffle) shuffled() }
             }
-            val mediaSource = metadataList.toMediaSource(dataSourceFactory)
+            mediaSource.clear()
+            mediaSource.addMediaSources(metadataList.toMediaSources(dataSourceFactory))
 
             val initialWindowIndex =
                 extras?.getInt(EXTRA_POSITION, metadataList.indexOf(itemToPlay))
@@ -53,7 +54,8 @@ class PlaybackPreparer(private val musicSource: MusicSource, private val exoPlay
         musicSource.whenReady {
             val metadataList = musicSource.search(query, extras ?: Bundle.EMPTY)
             if (metadataList.isNotEmpty()) {
-                val mediaSource = metadataList.toMediaSource(dataSourceFactory)
+                this.mediaSource.clear()
+                this.mediaSource.addMediaSources(metadataList.toMediaSources(dataSourceFactory))
                 exoPlayer.prepare(mediaSource)
                 exoPlayer.playWhenReady = playWhenReady
             }

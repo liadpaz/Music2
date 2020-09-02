@@ -44,6 +44,13 @@ fun setPlayPause(imageButton: ImageButton, playbackState: PlaybackStateCompat?) 
     ).into(imageButton)
 }
 
+@BindingAdapter("repeatMode")
+fun setRepeatMode(imageButton: ImageButton, @PlaybackStateCompat.RepeatMode repeatMode: Int) {
+    GlideApp.with(imageButton).load(
+        if (repeatMode == PlaybackStateCompat.REPEAT_MODE_ALL) R.drawable.ic_repeat else R.drawable.ic_repeat_one
+    ).into(imageButton)
+}
+
 @BindingAdapter("artistSongs")
 fun setArtistSongs(textView: MaterialTextView, artist: MediaBrowserCompat.MediaItem) {
     textView.text = textView.context.getString(
