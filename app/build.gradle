@@ -10,13 +10,13 @@ def versionMinor = 0
 def versionPatch = 0
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 29
     buildToolsVersion "29.0.3"
 
     defaultConfig {
         applicationId "com.liadpaz.music"
         minSdkVersion 26
-        targetSdkVersion 30
+        targetSdkVersion 29
         versionCode versionMajor * 1000 + versionMinor * 100 + versionPatch
         versionName "$versionMajor.$versionMinor.$versionPatch"
 

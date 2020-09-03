@@ -32,6 +32,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlin.time.ExperimentalTime
 
 class MusicService : MediaBrowserServiceCompat() {
 
@@ -82,8 +83,6 @@ class MusicService : MediaBrowserServiceCompat() {
 
     override fun onCreate() {
         super.onCreate()
-
-        Log.d(TAG, "onCreate: ")
 
         repository.granted.observeForever(permissionGrantedObserver)
 
@@ -181,7 +180,8 @@ class MusicService : MediaBrowserServiceCompat() {
         override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
             when (playbackState) {
                 Player.STATE_BUFFERING,
-                Player.STATE_READY -> {
+                Player.STATE_READY,
+                -> {
                     notificationManager.showNotification()
 
                     if (playbackState == Player.STATE_READY) {
@@ -246,6 +246,7 @@ class MusicService : MediaBrowserServiceCompat() {
     }
 
     class QueueEditor(private val playbackPreparer: PlaybackPreparer) : MediaSessionConnector.QueueEditor {
+        @ExperimentalTime
         override fun onCommand(player: Player, controlDispatcher: ControlDispatcher, command: String, extras: Bundle?, cb: ResultReceiver?): Boolean =
             when (command) {
                 ACTION_REMOVE_ITEM -> {

@@ -308,5 +308,8 @@
         app:constraintSetEnd="@id/queue_shown"
         app:constraintSetStart="@id/expanded"
         app:duration="250">
+        <OnClick
+            app:clickAction="toggle"
+            app:targetId="@id/ibToggleQueue" />
     </Transition>
 </MotionScene>

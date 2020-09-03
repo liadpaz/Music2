@@ -16,7 +16,9 @@ import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.motion.widget.TransitionAdapter
 import androidx.core.content.ContextCompat
 import androidx.core.view.updatePadding
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.findNavController
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -29,11 +31,11 @@ import com.liadpaz.music.ui.adapters.QueueAdapter
 import com.liadpaz.music.ui.viewmodels.MainViewModel
 import com.liadpaz.music.ui.viewmodels.PlayingViewModel
 import com.liadpaz.music.utils.InjectorUtils
+import kotlin.time.ExperimentalTime
 
 class MainActivity : AppCompatActivity() {
 
     private var smoothScroll = false
-    private var isQueueShown = false
 
     private lateinit var bottomSheet: BottomSheetBehavior<MotionLayout>
 
@@ -45,6 +47,7 @@ class MainActivity : AppCompatActivity() {
     }
     private lateinit var binding: ActivityMainBinding
 
+    @ExperimentalTime
     @SuppressLint("SwitchIntDef")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,7 +89,12 @@ class MainActivity : AppCompatActivity() {
         binding.guidelineTopScreen.setGuidelineBegin(resources.getDimensionPixelSize(resources.getIdentifier("status_bar_height", "dimen", "android")))
         binding.rvQueue.updatePadding(bottom = resources.getDimensionPixelSize(resources.getIdentifier("navigation_bar_height", "dimen", "android")))
 
-        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, ItemTouchHelper.START or ItemTouchHelper.END) {
+        binding.rvQueue.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
+
+        ItemTouchHelper(object : ItemTouchHelper.Callback() {
+            override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int =
+                makeMovementFlags(ItemTouchHelper.UP or ItemTouchHelper.DOWN, if (viewHolder.adapterPosition == playingViewModel.queuePosition.value) 0 else ItemTouchHelper.START or ItemTouchHelper.END)
+
             override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
                 playingViewModel.moveQueueItem(viewHolder.adapterPosition, target.adapterPosition)
                 (recyclerView.adapter as QueueAdapter).onMove(viewHolder.adapterPosition, target.adapterPosition)
@@ -110,6 +118,9 @@ class MainActivity : AppCompatActivity() {
             binding.viewPager.setCurrentItem(playingViewModel.queuePosition.value ?: 0, false)
         }
         playingViewModel.queuePosition.observe(this) {
+            if (lifecycle.currentState < Lifecycle.State.RESUMED) {
+                smoothScroll = false
+            }
             binding.viewPager.setCurrentItem(it, smoothScroll)
         }
 
@@ -142,19 +153,19 @@ class MainActivity : AppCompatActivity() {
         playingViewModel.playbackState.observe(this) { playback: PlaybackStateCompat ->
             when (playback.state) {
                 PlaybackStateCompat.STATE_BUFFERING,
-                PlaybackStateCompat.STATE_PLAYING -> {
+                PlaybackStateCompat.STATE_PLAYING,
+                -> {
                     if (bottomSheetState == BottomSheetBehavior.STATE_HIDDEN) {
                         bottomSheetState = BottomSheetBehavior.STATE_COLLAPSED
                     }
                 }
                 PlaybackStateCompat.STATE_NONE,
-                PlaybackStateCompat.STATE_STOPPED -> {
+                PlaybackStateCompat.STATE_STOPPED,
+                -> {
                     bottomSheetState = BottomSheetBehavior.STATE_HIDDEN
                 }
             }
         }
-
-        binding.ibToggleQueue.setOnClickListener { setShowQueue(!isQueueShown) }
 
         bottomSheet = BottomSheetBehavior.from(binding.bottomSheet).also {
             it.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
@@ -184,8 +195,19 @@ class MainActivity : AppCompatActivity() {
 
         binding.bottomSheet.addTransitionListener(object : TransitionAdapter() {
             override fun onTransitionCompleted(motionLayout: MotionLayout, currentId: Int) {
-                if (currentId == R.id.expanded) {
-                    motionLayout.setTransition(R.id.transition_bottomsheet)
+                when (currentId) {
+                    R.id.expanded -> {
+                        motionLayout.setTransition(R.id.transition_bottomsheet)
+                        binding.bottomSheet.isNestedScrollingEnabled = false
+                    }
+                    R.id.queue_shown -> binding.bottomSheet.isNestedScrollingEnabled = true
+                }
+            }
+
+            override fun onTransitionStarted(motionLayout: MotionLayout?, startId: Int, endId: Int) {
+                if (startId == R.id.expanded && endId == R.id.queue_shown) {
+                    (binding.rvQueue.layoutManager as? LinearLayoutManager)?.scrollToPositionWithOffset(playingViewModel.queuePosition.value
+                        ?: 0, 0)
                 }
             }
         })
@@ -203,7 +225,6 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
 
-        // TODO: check if the user wants the bottom sheet to be expanded
         if (bottomSheetState == BottomSheetBehavior.STATE_COLLAPSED) {
             bottomSheetState = BottomSheetBehavior.STATE_EXPANDED
         }
@@ -211,32 +232,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         if (bottomSheetState == BottomSheetBehavior.STATE_EXPANDED) {
-            if (isQueueShown) {
-                setShowQueue(false)
+            if (binding.bottomSheet.currentState == R.id.queue_shown) {
+                binding.bottomSheet.transitionToStart()
             } else {
                 bottomSheetState = BottomSheetBehavior.STATE_COLLAPSED
             }
         } else {
             super.onBackPressed()
-        }
-    }
-
-    private fun setShowQueue(show: Boolean) {
-        if (show) {
-            playingViewModel.queuePosition.value?.let { (binding.rvQueue.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(it, 0) }
-            isQueueShown = true
-            binding.bottomSheet.also {
-                it.setTransition(R.id.transition_queue)
-                it.transitionToEnd()
-            }
-            binding.bottomSheet.isNestedScrollingEnabled = true
-        } else {
-            isQueueShown = false
-            binding.bottomSheet.also {
-                it.setTransition(R.id.transition_queue)
-                it.transitionToStart()
-            }
-            binding.bottomSheet.isNestedScrollingEnabled = false
         }
     }
 

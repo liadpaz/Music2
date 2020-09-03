@@ -24,6 +24,7 @@ import com.liadpaz.music.ui.adapters.QueueAdapter
 import com.liadpaz.music.ui.adapters.SongsAdapter
 import com.liadpaz.music.ui.viewmodels.PlayingViewModel
 import com.liadpaz.music.utils.extensions.findDarkColor
+import kotlin.time.ExperimentalTime
 
 @BindingAdapter("songs")
 fun setSongs(recyclerView: RecyclerView, songs: List<MediaBrowserCompat.MediaItem>?) =
@@ -55,6 +56,7 @@ fun setPlayPause(imageButton: ImageButton, playbackState: PlaybackStateCompat?) 
     ).into(imageButton)
 }
 
+@ExperimentalTime
 @BindingAdapter("queue")
 fun setQueue(recyclerView: RecyclerView, queue: List<MediaSessionCompat.QueueItem>?) =
     (recyclerView.adapter as? QueueAdapter)?.submitList(queue)
