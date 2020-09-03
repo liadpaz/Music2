@@ -2,35 +2,38 @@ package com.liadpaz.music.ui.main
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
 import android.media.AudioManager
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
 import android.view.View
 import android.widget.SeekBar
 import androidx.activity.viewModels
-import androidx.annotation.ColorInt
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.motion.widget.MotionLayout
+import androidx.constraintlayout.motion.widget.TransitionAdapter
 import androidx.core.content.ContextCompat
+import androidx.core.view.updatePadding
 import androidx.navigation.findNavController
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.liadpaz.music.R
 import com.liadpaz.music.databinding.ActivityMainBinding
 import com.liadpaz.music.ui.adapters.ExtendedSongViewPagerAdapter
+import com.liadpaz.music.ui.adapters.QueueAdapter
 import com.liadpaz.music.ui.viewmodels.MainViewModel
 import com.liadpaz.music.ui.viewmodels.PlayingViewModel
 import com.liadpaz.music.utils.InjectorUtils
-import com.liadpaz.music.utils.extensions.findDarkColor
 
 class MainActivity : AppCompatActivity() {
 
     private var smoothScroll = false
+    private var isQueueShown = false
 
     private lateinit var bottomSheet: BottomSheetBehavior<MotionLayout>
 
@@ -40,13 +43,15 @@ class MainActivity : AppCompatActivity() {
     private val viewModel by viewModels<MainViewModel> {
         InjectorUtils.provideMainViewModelFactory(applicationContext)
     }
-    lateinit var binding: ActivityMainBinding
+    private lateinit var binding: ActivityMainBinding
 
     @SuppressLint("SwitchIntDef")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(ActivityMainBinding.inflate(layoutInflater).also { binding = it }.root)
         setSupportActionBar(binding.toolbarMain)
+
+        smoothScroll = false
 
         // sets the volume control on the app to 'STREAM_MUSIC'
         volumeControlStream = AudioManager.STREAM_MUSIC
@@ -79,16 +84,33 @@ class MainActivity : AppCompatActivity() {
         // set the bottom guideline on the top of the navigation bar
         binding.guidelineBottomScreen.setGuidelineEnd(resources.getDimensionPixelSize(resources.getIdentifier("navigation_bar_height", "dimen", "android")))
         binding.guidelineTopScreen.setGuidelineBegin(resources.getDimensionPixelSize(resources.getIdentifier("status_bar_height", "dimen", "android")))
+        binding.rvQueue.updatePadding(bottom = resources.getDimensionPixelSize(resources.getIdentifier("navigation_bar_height", "dimen", "android")))
+
+        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, ItemTouchHelper.START or ItemTouchHelper.END) {
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+                playingViewModel.moveQueueItem(viewHolder.adapterPosition, target.adapterPosition)
+                (recyclerView.adapter as QueueAdapter).onMove(viewHolder.adapterPosition, target.adapterPosition)
+                return true
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                playingViewModel.removeQueueItem(viewHolder.adapterPosition)
+                (binding.rvQueue.adapter as QueueAdapter).onSwipe(viewHolder.adapterPosition)
+            }
+        }).also { itemTouchHelper ->
+            binding.rvQueue.adapter = QueueAdapter({
+                playingViewModel.skipToQueueItem(it)
+            }) {
+                itemTouchHelper.startDrag(it)
+            }
+        }.attachToRecyclerView(binding.rvQueue)
 
         playingViewModel.queue.observe(this) {
-            Log.d(TAG, "onViewCreated: QUEUE CHANGED WTF??!?!")
-            smoothScroll = false
             binding.viewPager.adapter = ExtendedSongViewPagerAdapter(this)
             binding.viewPager.setCurrentItem(playingViewModel.queuePosition.value ?: 0, false)
         }
         playingViewModel.queuePosition.observe(this) {
             binding.viewPager.setCurrentItem(it, smoothScroll)
-            smoothScroll = true
         }
 
         binding.ibDown.setOnClickListener {
@@ -132,35 +154,18 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        playingViewModel.mediaMetadata.observe(this) {
-            // set bottomsheet background
-            binding.bottomSheet.background =
-                GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(it.palette.getDominantColor(Color.GRAY), it.palette.findDarkColor()))
-            // set the top buttons (on the bottom sheet) color
-            setTopButtonsColor(it.palette.dominantSwatch!!.bodyTextColor)
-            // set seek bar max progress
-            binding.seekBar.max = it.duration.toInt() / 1000
-            // set the duration textview to the duration of the media item
-            binding.tvDuration.text =
-                PlayingViewModel.NowPlayingMetadata.timestampToMSS(it.duration)
-        }
-        playingViewModel.mediaPosition.observe(this) {
-            binding.seekBar.progress = (it / 1000.0).toInt()
-            binding.tvElapsedTime.text = PlayingViewModel.NowPlayingMetadata.timestampToMSS(it)
-        }
+        binding.ibToggleQueue.setOnClickListener { setShowQueue(!isQueueShown) }
 
         bottomSheet = BottomSheetBehavior.from(binding.bottomSheet).also {
             it.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
                 override fun onStateChanged(bottomSheet: View, newState: Int) {
                     when (newState) {
                         BottomSheetBehavior.STATE_COLLAPSED -> {
-                            binding.viewPager.isUserInputEnabled = false
                             binding.bottomSheet.setOnClickListener {
                                 bottomSheetState = BottomSheetBehavior.STATE_EXPANDED
                             }
                         }
                         BottomSheetBehavior.STATE_EXPANDED -> {
-                            binding.viewPager.isUserInputEnabled = true
                             binding.bottomSheet.setOnClickListener { }
                         }
                         BottomSheetBehavior.STATE_HIDDEN -> {
@@ -176,6 +181,14 @@ class MainActivity : AppCompatActivity() {
                 }
             })
         }
+
+        binding.bottomSheet.addTransitionListener(object : TransitionAdapter() {
+            override fun onTransitionCompleted(motionLayout: MotionLayout, currentId: Int) {
+                if (currentId == R.id.expanded) {
+                    motionLayout.setTransition(R.id.transition_bottomsheet)
+                }
+            }
+        })
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -187,17 +200,44 @@ class MainActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean =
         findNavController(R.id.nav_host_fragment).navigateUp()
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+
+        // TODO: check if the user wants the bottom sheet to be expanded
+        if (bottomSheetState == BottomSheetBehavior.STATE_COLLAPSED) {
+            bottomSheetState = BottomSheetBehavior.STATE_EXPANDED
+        }
+    }
+
     override fun onBackPressed() {
         if (bottomSheetState == BottomSheetBehavior.STATE_EXPANDED) {
-            bottomSheetState = BottomSheetBehavior.STATE_COLLAPSED
+            if (isQueueShown) {
+                setShowQueue(false)
+            } else {
+                bottomSheetState = BottomSheetBehavior.STATE_COLLAPSED
+            }
         } else {
             super.onBackPressed()
         }
     }
 
-    private fun setTopButtonsColor(@ColorInt color: Int) {
-        binding.ibDown.setColorFilter(color)
-        binding.ibMore.setColorFilter(color)
+    private fun setShowQueue(show: Boolean) {
+        if (show) {
+            playingViewModel.queuePosition.value?.let { (binding.rvQueue.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(it, 0) }
+            isQueueShown = true
+            binding.bottomSheet.also {
+                it.setTransition(R.id.transition_queue)
+                it.transitionToEnd()
+            }
+            binding.bottomSheet.isNestedScrollingEnabled = true
+        } else {
+            isQueueShown = false
+            binding.bottomSheet.also {
+                it.setTransition(R.id.transition_queue)
+                it.transitionToStart()
+            }
+            binding.bottomSheet.isNestedScrollingEnabled = false
+        }
     }
 
     @BottomSheetBehavior.State

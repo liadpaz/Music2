@@ -9,4 +9,13 @@
     <string name="item_artist_songs">%d songs</string>
     <string name="nav_album">Album</string>
     <string name="description_more">Show more options</string>
+    <string name="description_art">Cover art of the current playing song</string>
+    <string name="description_play_pause">Play or pause the playback</string>
+    <string name="description_skip_prev">Skips to the previous song on the queue</string>
+    <string name="description_skip_next">Skips to the next song on the queue</string>
+    <string name="description_repeat">Toggles the repeat mode of the queue</string>
+    <string name="description_show_queue">Shows the current queue</string>
+    <string name="description_drop_down">Drops the now playing screen down</string>
+    <string name="description_drag">Allows to drag the song</string>
+    <string name="description_art_preview">Cover art of the song</string>
 </resources>

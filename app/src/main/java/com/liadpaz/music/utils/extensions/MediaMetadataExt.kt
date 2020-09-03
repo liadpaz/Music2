@@ -189,6 +189,9 @@ inline var MediaMetadataCompat.Builder.flag: Int
 inline val MediaMetadataCompat.fullDescription: MediaDescriptionCompat
     get() = description.also { it.extras?.putAll(bundle) }
 
+fun MediaDescriptionCompat.toMediaSource(dataSourceFactory: DataSource.Factory): ProgressiveMediaSource =
+    ProgressiveMediaSource.Factory(dataSourceFactory).setTag(this).createMediaSource(mediaUri)
+
 fun MediaMetadataCompat.toMediaSource(dataSourceFactory: DataSource.Factory): ProgressiveMediaSource =
     ProgressiveMediaSource.Factory(dataSourceFactory).setTag(fullDescription).createMediaSource(mediaUri)
 

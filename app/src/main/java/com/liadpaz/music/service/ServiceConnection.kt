@@ -7,11 +7,18 @@ import android.os.Handler
 import android.os.Looper
 import android.os.ResultReceiver
 import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import androidx.core.os.bundleOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.liadpaz.music.service.MusicService.QueueEditor.Companion.ACTION_MOVE_ITEM
+import com.liadpaz.music.service.MusicService.QueueEditor.Companion.ACTION_REMOVE_ITEM
+import com.liadpaz.music.service.MusicService.QueueEditor.Companion.EXTRA_FROM_POSITION
+import com.liadpaz.music.service.MusicService.QueueEditor.Companion.EXTRA_QUEUE_POSITION
+import com.liadpaz.music.service.MusicService.QueueEditor.Companion.EXTRA_TO_POSITION
 import com.liadpaz.music.utils.extensions.id
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -46,6 +53,17 @@ class ServiceConnection private constructor(context: Context, serviceComponent: 
     fun unsubscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback) =
         mediaBrowser.unsubscribe(parentId, callback)
 
+    fun addQueueItem(item: MediaDescriptionCompat) = mediaController?.addQueueItem(item)
+
+    fun addQueueItem(item: MediaDescriptionCompat, position: Int) =
+        mediaController?.addQueueItem(item, position)
+
+    fun removeQueueItemAt(position: Int) =
+        sendCommand(ACTION_REMOVE_ITEM, bundleOf(EXTRA_QUEUE_POSITION to position))
+
+    fun moveQueueItem(fromPosition: Int, toPosition: Int) =
+        sendCommand(ACTION_MOVE_ITEM, bundleOf(EXTRA_FROM_POSITION to fromPosition, EXTRA_TO_POSITION to toPosition))
+
     fun sendCommand(command: String, parameters: Bundle?, resultCallback: ((Int, Bundle?) -> Unit) = { _, _ -> }) =
         if (mediaBrowser.isConnected) {
             mediaController?.sendCommand(command, parameters, object : ResultReceiver(Handler(Looper.getMainLooper())) {
@@ -58,7 +76,7 @@ class ServiceConnection private constructor(context: Context, serviceComponent: 
             false
         }
 
-    suspend fun sendCommand(command: String, parameters: Bundle?): Pair<Int, Bundle?> =
+    suspend fun sendCommandAsync(command: String, parameters: Bundle?): Pair<Int, Bundle?> =
         suspendCancellableCoroutine { cont ->
             sendCommand(command, parameters) { resultCode, resultData ->
                 cont.resume(Pair(resultCode, resultData))

@@ -18,8 +18,6 @@ import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
-import com.google.android.exoplayer2.source.ConcatenatingMediaSource
-import com.google.android.exoplayer2.source.ShuffleOrder
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
@@ -46,10 +44,8 @@ class MusicService : MediaBrowserServiceCompat() {
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var mediaSessionConnector: MediaSessionConnector
 
-    private val musicSource = ConcatenatingMediaSource(false, true, ShuffleOrder.DefaultShuffleOrder(0))
-
     private val browseTree: BrowseTree by lazy {
-        BrowseTree(applicationContext, mediaSource)
+        BrowseTree(mediaSource)
     }
 
     private var isForegroundService: Boolean = false
@@ -115,11 +111,11 @@ class MusicService : MediaBrowserServiceCompat() {
             val dataSourceFactory =
                 DefaultDataSourceFactory(this, Util.getUserAgent(this, getString(R.string.app_name)))
 
-            val playbackPreparer = PlaybackPreparer(mediaSource, exoPlayer, musicSource, dataSourceFactory)
+            val playbackPreparer = PlaybackPreparer(browseTree, exoPlayer, dataSourceFactory)
             connector.setPlayer(exoPlayer)
             connector.setPlaybackPreparer(playbackPreparer)
             connector.setQueueNavigator(QueueNavigator(mediaSession))
-            connector.setQueueEditor(QueueEditor())
+            connector.setQueueEditor(QueueEditor(playbackPreparer))
         }
     }
 
@@ -200,6 +196,7 @@ class MusicService : MediaBrowserServiceCompat() {
 
         override fun onTimelineChanged(timeline: Timeline, @Player.TimelineChangeReason reason: Int) {
             exoPlayer.playWhenReady = true
+            repository.setQueuePosition(exoPlayer.currentWindowIndex)
             repository.setQueue(timeline.let {
                 val queue = arrayListOf<MediaSessionCompat.QueueItem>()
                 for (i in 0 until it.windowCount) {
@@ -210,9 +207,11 @@ class MusicService : MediaBrowserServiceCompat() {
             })
         }
 
-        override fun onPositionDiscontinuity(reason: Int) {
-            super.onPositionDiscontinuity(reason)
+        override fun onPositionDiscontinuity(@Player.DiscontinuityReason reason: Int) {
             repository.setQueuePosition(exoPlayer.currentWindowIndex)
+            if (reason == Player.DISCONTINUITY_REASON_SEEK_ADJUSTMENT) {
+                exoPlayer.playWhenReady = true
+            }
         }
 
         override fun onPlayerError(error: ExoPlaybackException) {
@@ -246,26 +245,42 @@ class MusicService : MediaBrowserServiceCompat() {
         }
     }
 
-    private inner class QueueEditor : MediaSessionConnector.QueueEditor {
-        override fun onCommand(player: Player, controlDispatcher: ControlDispatcher, command: String, extras: Bundle?, cb: ResultReceiver?): Boolean {
-            TODO("Not yet implemented")
-        }
+    class QueueEditor(private val playbackPreparer: PlaybackPreparer) : MediaSessionConnector.QueueEditor {
+        override fun onCommand(player: Player, controlDispatcher: ControlDispatcher, command: String, extras: Bundle?, cb: ResultReceiver?): Boolean =
+            when (command) {
+                ACTION_REMOVE_ITEM -> {
+                    extras?.let { playbackPreparer.removeQueueItem(it.getInt(EXTRA_QUEUE_POSITION)) }
+                    true
+                }
+                ACTION_MOVE_ITEM -> {
+                    extras?.let { playbackPreparer.moveQueueItem(it.getInt(EXTRA_FROM_POSITION), it.getInt(EXTRA_TO_POSITION)) }
+                    true
+                }
+                else -> false
+            }
 
-        override fun onAddQueueItem(player: Player, description: MediaDescriptionCompat) {
+        override fun onAddQueueItem(player: Player, description: MediaDescriptionCompat) =
+            playbackPreparer.addQueueItem(description)
 
-        }
+        override fun onAddQueueItem(player: Player, description: MediaDescriptionCompat, index: Int) =
+            playbackPreparer.addQueueItem(description, index)
 
-        override fun onAddQueueItem(player: Player, description: MediaDescriptionCompat, index: Int) {
-            TODO("Not yet implemented")
-        }
+        override fun onRemoveQueueItem(player: Player, description: MediaDescriptionCompat): Nothing =
+            throw UnsupportedOperationException()
 
-        override fun onRemoveQueueItem(player: Player, description: MediaDescriptionCompat) {
-            TODO("Not yet implemented")
+        companion object {
+            const val ACTION_REMOVE_ITEM = "action_remove_item"
+            const val ACTION_MOVE_ITEM = "action_move_item"
+            const val EXTRA_QUEUE_POSITION = "extra_queue_position"
+            const val EXTRA_FROM_POSITION = "extra_from_position"
+            const val EXTRA_TO_POSITION = "extra_to_position"
         }
     }
 
-    private inner class QueueNavigator(mediaSession: MediaSessionCompat) : TimelineQueueNavigator(mediaSession, 1000) {
+    private class QueueNavigator(mediaSession: MediaSessionCompat) : TimelineQueueNavigator(mediaSession) {
+
         private val window = Timeline.Window()
+
         override fun getMediaDescription(player: Player, windowIndex: Int): MediaDescriptionCompat =
             player.currentTimeline.getWindow(windowIndex, window).tag as MediaDescriptionCompat
     }

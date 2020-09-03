@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.lifecycle.*
@@ -23,7 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.math.floor
 
-class PlayingViewModel(app: Application, private val serviceConnection: ServiceConnection, private val repository: Repository) : AndroidViewModel(app) {
+class PlayingViewModel(app: Application, private val serviceConnection: ServiceConnection, repository: Repository) : AndroidViewModel(app) {
 
     data class NowPlayingMetadata(val id: String, val albumArtUri: Uri, val title: String?, val artist: String?, val duration: Long, val palette: Palette) {
 
@@ -48,7 +49,7 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
     val playbackState: LiveData<PlaybackStateCompat> = _playbackState
     val mediaMetadata: LiveData<NowPlayingMetadata> = _mediaMetadata
     val mediaPosition: LiveData<Long> = _mediaPosition
-    val queue = repository.queue
+    val queue: LiveData<List<MediaSessionCompat.QueueItem>> = repository.queue
     val queuePosition: LiveData<Int> = repository.queuePosition
     val repeatMode: LiveData<Int> = serviceConnection.repeatMode
 
@@ -74,6 +75,11 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
             checkPlaybackPosition()
         }
     }, POSITION_UPDATE_INTERVAL_MILLIS)
+
+    fun moveQueueItem(fromPosition: Int, toPosition: Int) =
+        serviceConnection.moveQueueItem(fromPosition, toPosition)
+
+    fun removeQueueItem(position: Int) = serviceConnection.removeQueueItemAt(position)
 
     fun skipToQueueItem(position: Int) =
         serviceConnection.transportControls?.skipToQueueItem(position.toLong())
@@ -106,7 +112,7 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
         if (mediaMetadata.duration != 0L && mediaMetadata.id != null) {
             CoroutineScope(Dispatchers.IO).launch {
                 _mediaMetadata.postValue(
-                    PlayingViewModel.NowPlayingMetadata(
+                    NowPlayingMetadata(
                         mediaMetadata.id!!,
                         mediaMetadata.albumArtUri,
                         mediaMetadata.title?.trim(),

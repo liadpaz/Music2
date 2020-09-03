@@ -5,8 +5,8 @@
     <data>
 
         <variable
-            name="song"
-            type="android.support.v4.media.MediaBrowserCompat.MediaItem" />
+            name="item"
+            type="android.support.v4.media.session.MediaSessionCompat.QueueItem" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -15,6 +15,18 @@
         android:background="?attr/selectableItemBackground"
         android:clickable="true"
         android:focusable="true">
+
+        <ImageButton
+            android:id="@+id/ibDrag"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:adjustViewBounds="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/description_drag"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_drag_handle" />
 
         <ImageView
             android:id="@+id/ivSongCover"
@@ -26,9 +38,9 @@
             android:adjustViewBounds="true"
             android:contentDescription="@string/description_art_preview"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toEndOf="@id/ibDrag"
             app:layout_constraintTop_toTopOf="parent"
-            app:uri="@{song.description.iconUri}" />
+            app:uri="@{item.description.iconUri}" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline"
@@ -46,7 +58,7 @@
             android:layout_marginBottom="8dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="@{song.description.title}"
+            android:text="@{item.description.title}"
             app:layout_constraintBottom_toTopOf="@+id/guideline"
             app:layout_constraintEnd_toStartOf="@+id/ibMore"
             app:layout_constraintStart_toEndOf="@+id/ivSongCover" />
@@ -60,7 +72,7 @@
             android:layout_marginEnd="16dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="@{song.description.subtitle}"
+            android:text="@{item.description.subtitle}"
             app:layout_constraintEnd_toStartOf="@+id/ibMore"
             app:layout_constraintStart_toEndOf="@+id/ivSongCover"
             app:layout_constraintTop_toTopOf="@+id/guideline" />

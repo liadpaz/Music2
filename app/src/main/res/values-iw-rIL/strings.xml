@@ -9,4 +9,13 @@
     <string name="item_artist_songs">%d שירים</string>
     <string name="nav_album">אלבום</string>
     <string name="description_more">הצג יותר אפשרויות</string>
+    <string name="description_art">תמונה של השיר המתנגן כעת</string>
+    <string name="description_play_pause">הפעל או עצור את השמע</string>
+    <string name="description_skip_prev">מדלג לשיר הקודם בתור</string>
+    <string name="description_skip_next">מדלג לשיר הבא בתור</string>
+    <string name="description_repeat">מחליף בין מצבי החזרה בתור</string>
+    <string name="description_show_queue">מראה את התור הנוכחי</string>
+    <string name="description_drop_down">מוריד את מסך המתנגן כעת ללמטה</string>
+    <string name="description_drag">מאפשר לגרור את השיר</string>
+    <string name="description_art_preview">תמונה של השיר</string>
 </resources>

@@ -9,9 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.liadpaz.music.repository.Repository
 import com.liadpaz.music.service.EXTRA_FROM
 import com.liadpaz.music.service.EXTRA_FROM_ALBUMS
-import com.liadpaz.music.service.EXTRA_FROM_ALL
 import com.liadpaz.music.service.ServiceConnection
-import com.liadpaz.music.service.utils.ALBUMS_ROOT
 
 class AlbumViewModel(private val serviceConnection: ServiceConnection, private val repository: Repository, private val album: String) : ViewModel() {
 
