@@ -25,12 +25,23 @@
         android:id="@+id/mainFragment"
         android:name="com.liadpaz.music.ui.fragments.MainFragment"
         android:label="main_fragment"
-        tools:layout="@layout/fragment_main" >
+        tools:layout="@layout/fragment_main">
         <action
             android:id="@+id/action_mainFragment_to_albumFragment"
             app:destination="@id/albumFragment" />
         <action
             android:id="@+id/action_mainFragment_to_artistFragment"
             app:destination="@id/artistFragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_playlistFragment"
+            app:destination="@id/playlistFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/playlistFragment"
+        android:name="com.liadpaz.music.ui.fragments.PlaylistFragment"
+        tools:layout="@layout/fragment_playlist">
+        <argument
+            android:name="playlist"
+            app:argType="android.support.v4.media.MediaBrowserCompat$MediaItem" />
     </fragment>
 </navigation>

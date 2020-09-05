@@ -5,22 +5,22 @@
 
         <variable
             name="viewModel"
-            type="com.liadpaz.music.ui.viewmodels.PlaylistsViewModel" />
+            type="com.liadpaz.music.ui.viewmodels.PlaylistViewModel" />
     </data>
 
     <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".ui.fragments.PlaylistsFragment">
+        tools:context=".ui.fragments.PlaylistFragment">
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvPlaylists"
+            android:id="@+id/rvSongs"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:orientation="vertical"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:playlists="@{viewModel.playlists}" />
+            app:songs="@{viewModel.songs}" />
     </FrameLayout>
 </layout>

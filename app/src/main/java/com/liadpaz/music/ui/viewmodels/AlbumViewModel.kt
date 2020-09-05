@@ -22,9 +22,7 @@ class AlbumViewModel(private val serviceConnection: ServiceConnection, private v
         serviceConnection.subscribe(album, subscriptionCallback)
     }
 
-    private val _songs = MutableLiveData<List<MediaBrowserCompat.MediaItem>>().apply {
-        postValue(listOf())
-    }
+    private val _songs = MutableLiveData<List<MediaBrowserCompat.MediaItem>>()
     val songs: LiveData<List<MediaBrowserCompat.MediaItem>> = _songs
 
     fun play(mediaItem: MediaBrowserCompat.MediaItem) =

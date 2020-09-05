@@ -36,3 +36,5 @@ fun Palette.findDarkColor(): Int {
 
 private fun isDarkColor(@ColorInt colorInt: Int): Boolean =
     (0.2126 * Color.red(colorInt) + 0.7152 * Color.green(colorInt) + 0.0722 * Color.blue(colorInt)) > 0.5
+
+fun Int?.isNullOrZero(): Boolean = this == null || this == 0

@@ -6,10 +6,10 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
 import androidx.lifecycle.*
 import androidx.palette.graphics.Palette
 import com.liadpaz.music.repository.Repository
@@ -76,6 +76,10 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
         }
     }, POSITION_UPDATE_INTERVAL_MILLIS)
 
+    fun addQueueItem(item: MediaDescriptionCompat) = serviceConnection.addQueueItem(item)
+
+    fun addNextQueueItem(item: MediaDescriptionCompat) = serviceConnection.addQueueItem(item, queuePosition.value!! + 1)
+
     fun moveQueueItem(fromPosition: Int, toPosition: Int) =
         serviceConnection.moveQueueItem(fromPosition, toPosition)
 
@@ -126,10 +130,10 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
     }
 
     fun playPause() = serviceConnection.transportControls?.apply {
-        Log.d(TAG, "playPause: ")
         when (_playbackState.value?.state) {
             PlaybackStateCompat.STATE_PLAYING,
-            PlaybackStateCompat.STATE_BUFFERING -> pause()
+            PlaybackStateCompat.STATE_BUFFERING,
+            -> pause()
             else -> play()
         }
     }
@@ -150,5 +154,3 @@ inline val PlaybackStateCompat.currentPlayBackPosition: Long
     }
 
 private const val POSITION_UPDATE_INTERVAL_MILLIS = 100L
-
-private const val TAG = "PlayingViewModel"

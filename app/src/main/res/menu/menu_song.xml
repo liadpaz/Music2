@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/menu_play_next"
+        android:title="@string/menu_play_next" />
+    <item
+        android:id="@+id/menu_add_to_queue"
+        android:title="@string/menu_add_to_queue" />
+    <item
+        android:id="@+id/menu_go_to_album"
+        android:title="@string/menu_go_album" />
+    <item
+        android:id="@+id/menu_go_to_artist"
+        android:title="@string/menu_go_artist" />
+    <item
+        android:id="@+id/menu_add_to_playlist"
+        android:title="@string/menu_add_to_playlist" />
+</menu>

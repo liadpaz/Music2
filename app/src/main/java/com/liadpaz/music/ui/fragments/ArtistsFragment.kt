@@ -35,7 +35,6 @@ class ArtistsFragment : Fragment() {
         }
         binding.rvArtists.layoutManager = GridLayoutManager(requireContext(), 3)
         binding.rvArtists.addItemDecoration(ItemOffsetDecoration(16))
-
         binding.rvArtists.updatePadding(bottom = requireActivity().resources.let { it.getDimensionPixelSize(it.getIdentifier("navigation_bar_height", "dimen", "android")) + it.getDimension(R.dimen.bottomSheetHeight).toInt() })
     }
 }

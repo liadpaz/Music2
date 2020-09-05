@@ -2,7 +2,6 @@ package com.liadpaz.music.ui.adapters
 
 import android.annotation.SuppressLint
 import android.support.v4.media.session.MediaSessionCompat
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.ViewGroup
@@ -12,11 +11,10 @@ import com.liadpaz.music.databinding.ItemQueueBinding
 import com.liadpaz.music.utils.C
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.time.ExperimentalTime
 
 class QueueAdapter(private val onItemClick: (Int) -> Unit, private val onDragClick: (ItemViewHolder) -> Unit) : ListAdapter<MediaSessionCompat.QueueItem, QueueAdapter.ItemViewHolder>(C.queueDiffCallback) {
 
-    private var toSubmit = false
+    var toSubmit = false
 
     private var currentQueue: MutableList<MediaSessionCompat.QueueItem>? = null
 
@@ -26,11 +24,9 @@ class QueueAdapter(private val onItemClick: (Int) -> Unit, private val onDragCli
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) =
         holder.bind(getItem(position))
 
-    @ExperimentalTime
     override fun submitList(list: List<MediaSessionCompat.QueueItem>?) {
-        Log.d(TAG, "submitList: $toSubmit")
-        currentQueue = list?.let { ArrayList(it) }
         if (toSubmit) {
+            currentQueue = list?.let { ArrayList(it) }
             super.submitList(currentQueue)
         } else {
             toSubmit = true
@@ -39,13 +35,13 @@ class QueueAdapter(private val onItemClick: (Int) -> Unit, private val onDragCli
 
     fun onSwipe(position: Int) {
         toSubmit = false
-        currentQueue?.removeAt(position)
+        currentQueue!!.removeAt(position)
         notifyItemRemoved(position)
     }
 
     fun onMove(fromPosition: Int, toPosition: Int) {
         toSubmit = false
-        currentQueue?.let { Collections.swap(it, fromPosition, toPosition) }
+        Collections.swap(currentQueue!!, fromPosition, toPosition)
         notifyItemMoved(fromPosition, toPosition)
     }
 
@@ -71,5 +67,3 @@ class QueueAdapter(private val onItemClick: (Int) -> Unit, private val onDragCli
         }
     }
 }
-
-private const val TAG = "QueueAdapter"

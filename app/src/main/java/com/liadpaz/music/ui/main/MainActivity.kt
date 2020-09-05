@@ -31,11 +31,11 @@ import com.liadpaz.music.ui.adapters.QueueAdapter
 import com.liadpaz.music.ui.viewmodels.MainViewModel
 import com.liadpaz.music.ui.viewmodels.PlayingViewModel
 import com.liadpaz.music.utils.InjectorUtils
-import kotlin.time.ExperimentalTime
 
 class MainActivity : AppCompatActivity() {
 
     private var smoothScroll = false
+    private var isQueueChanging = false
 
     private lateinit var bottomSheet: BottomSheetBehavior<MotionLayout>
 
@@ -47,7 +47,6 @@ class MainActivity : AppCompatActivity() {
     }
     private lateinit var binding: ActivityMainBinding
 
-    @ExperimentalTime
     @SuppressLint("SwitchIntDef")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,6 +63,7 @@ class MainActivity : AppCompatActivity() {
         // control the title of the action bar, it depends on the destination of the navigation component
         navController.addOnDestinationChangedListener { _, destination, arguments ->
             supportActionBar?.title = when (destination.id) {
+                R.id.playlistFragment -> arguments?.getParcelable<MediaBrowserCompat.MediaItem>("playlist")?.description?.title
                 R.id.artistFragment -> arguments?.getParcelable<MediaBrowserCompat.MediaItem>("artist")?.description?.subtitle
                 R.id.albumFragment -> arguments?.getParcelable<MediaBrowserCompat.MediaItem>("album")?.description?.description
                 else -> getString(R.string.app_name)
@@ -92,18 +92,36 @@ class MainActivity : AppCompatActivity() {
         binding.rvQueue.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
 
         ItemTouchHelper(object : ItemTouchHelper.Callback() {
+            private var initialIndex = -1
+
             override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int =
                 makeMovementFlags(ItemTouchHelper.UP or ItemTouchHelper.DOWN, if (viewHolder.adapterPosition == playingViewModel.queuePosition.value) 0 else ItemTouchHelper.START or ItemTouchHelper.END)
 
             override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-                playingViewModel.moveQueueItem(viewHolder.adapterPosition, target.adapterPosition)
                 (recyclerView.adapter as QueueAdapter).onMove(viewHolder.adapterPosition, target.adapterPosition)
                 return true
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                playingViewModel.removeQueueItem(viewHolder.adapterPosition)
-                (binding.rvQueue.adapter as QueueAdapter).onSwipe(viewHolder.adapterPosition)
+                isQueueChanging = true
+                val fromIndex = viewHolder.adapterPosition
+                (binding.rvQueue.adapter as QueueAdapter).onSwipe(fromIndex)
+                playingViewModel.removeQueueItem(fromIndex)
+            }
+
+            override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
+                if (actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
+                    viewHolder!!.itemView.elevation = 16F
+                    initialIndex = viewHolder.adapterPosition
+                }
+            }
+
+            override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
+                viewHolder.itemView.elevation = 0F
+                isQueueChanging = initialIndex != viewHolder.adapterPosition
+                if (initialIndex != -1) {
+                    playingViewModel.moveQueueItem(initialIndex, viewHolder.adapterPosition)
+                }
             }
         }).also { itemTouchHelper ->
             binding.rvQueue.adapter = QueueAdapter({
@@ -121,7 +139,11 @@ class MainActivity : AppCompatActivity() {
             if (lifecycle.currentState < Lifecycle.State.RESUMED) {
                 smoothScroll = false
             }
-            binding.viewPager.setCurrentItem(it, smoothScroll)
+            if (!isQueueChanging) {
+                binding.viewPager.setCurrentItem(it, smoothScroll)
+            } else {
+                isQueueChanging = false
+            }
         }
 
         binding.ibDown.setOnClickListener {
@@ -130,7 +152,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
-                if (smoothScroll) {
+                if (smoothScroll && !isQueueChanging) {
                     playingViewModel.skipToQueueItem(position)
                 } else {
                     smoothScroll = true
@@ -139,29 +161,26 @@ class MainActivity : AppCompatActivity() {
         })
 
         binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar, position: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    playingViewModel.seekTo(seekBar.progress * 1000L)
-                }
-            }
+            override fun onProgressChanged(seekBar: SeekBar, position: Int, fromUser: Boolean) =
+                Unit
 
             override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
 
-            override fun onStopTrackingTouch(seekBar: SeekBar) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+                playingViewModel.seekTo(seekBar.progress * 1000L)
+            }
         })
 
         playingViewModel.playbackState.observe(this) { playback: PlaybackStateCompat ->
             when (playback.state) {
                 PlaybackStateCompat.STATE_BUFFERING,
-                PlaybackStateCompat.STATE_PLAYING,
-                -> {
+                PlaybackStateCompat.STATE_PLAYING -> {
                     if (bottomSheetState == BottomSheetBehavior.STATE_HIDDEN) {
                         bottomSheetState = BottomSheetBehavior.STATE_COLLAPSED
                     }
                 }
                 PlaybackStateCompat.STATE_NONE,
-                PlaybackStateCompat.STATE_STOPPED,
-                -> {
+                PlaybackStateCompat.STATE_STOPPED -> {
                     bottomSheetState = BottomSheetBehavior.STATE_HIDDEN
                 }
             }
@@ -235,6 +254,9 @@ class MainActivity : AppCompatActivity() {
             if (binding.bottomSheet.currentState == R.id.queue_shown) {
                 binding.bottomSheet.transitionToStart()
             } else {
+                if (binding.bottomSheet.progress != 0F) {
+                    binding.bottomSheet.progress = 0F
+                }
                 bottomSheetState = BottomSheetBehavior.STATE_COLLAPSED
             }
         } else {

@@ -35,7 +35,6 @@ class AlbumsFragment : Fragment() {
         }
         binding.rvAlbums.layoutManager = GridLayoutManager(requireContext(), 2)
         binding.rvAlbums.addItemDecoration(ItemOffsetDecoration(16))
-
         binding.rvAlbums.updatePadding(bottom = requireActivity().resources.let { it.getDimensionPixelSize(it.getIdentifier("navigation_bar_height", "dimen", "android")) + it.getDimension(R.dimen.bottomSheetHeight).toInt() })
     }
 }

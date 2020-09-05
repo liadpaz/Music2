@@ -17,5 +17,3 @@ class MainViewModel(private val serviceConnection: ServiceConnection, private va
             MainViewModel(serviceConnection, repository) as T
     }
 }
-
-private const val TAG = "MainViewModel"

@@ -1,106 +1,71 @@
 package com.liadpaz.music.service.utils
 
+import android.content.Context
 import android.os.Bundle
 import android.provider.MediaStore
+import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.util.Log
-import androidx.annotation.IntDef
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
+import com.liadpaz.music.R
+import com.liadpaz.music.data.Song
+import com.liadpaz.music.repository.Repository
+import com.liadpaz.music.utils.contentprovider.ORDER_LAST_ADDED
+import com.liadpaz.music.utils.contentprovider.SongProvider
 import com.liadpaz.music.utils.extensions.*
 
-interface MusicSource : Iterable<MediaMetadataCompat> {
+interface MusicSource {
 
-    /**
-     * Begins loading the data for this music source.
-     */
-    suspend fun load()
-
-    /**
-     * Method which will perform a given action after this [MusicSource] is ready to be used.
-     *
-     * @param performAction A lambda expression to be called with a boolean parameter when
-     * the source is ready. `true` indicates the source was successfully prepared, `false`
-     * indicates an error occurred.
-     */
-    fun whenReady(performAction: (Boolean) -> Unit): Boolean
-
-    fun search(query: String, extras: Bundle): List<MediaMetadataCompat>
+    fun search(query: String, extras: Bundle?): List<MediaMetadataCompat>
 }
 
-@IntDef(
-    STATE_CREATED,
-    STATE_INITIALIZING,
-    STATE_INITIALIZED,
-    STATE_ERROR
-)
-@Retention(AnnotationRetention.SOURCE)
-annotation class State
+class FileMusicSource(context: Context, repository: Repository) : LiveData<FileMusicSource.SourceChange>(), MusicSource, Iterable<MediaMetadataCompat> {
 
-/**
- * State indicating the source was created, but no initialization has performed.
- */
-const val STATE_CREATED = 1
+    val recentlyAddedName = context.getString(R.string.playlist_recently_added)
 
-/**
- * State indicating initialization of the source is in progress.
- */
-const val STATE_INITIALIZING = 2
+    private val allSongProvider = SongProvider(context, folder = repository.folder.value!!)
+    private val recentlyAddedProvider = SongProvider(context, folder = repository.folder.value!!, sortOrder = ORDER_LAST_ADDED)
+    private val playlistsProvider = SongProvider(context, folder = "")
 
-/**
- * State indicating the source has been initialized and is ready to be used.
- */
-const val STATE_INITIALIZED = 3
+    private var allSongs: List<MediaMetadataCompat> = emptyList()
+    private var recentlyAdded: List<MediaMetadataCompat> = emptyList()
+    private var playlists: HashMap<String, List<MediaMetadataCompat>> = hashMapOf()
 
-/**
- * State indicating an error has occurred.
- */
-const val STATE_ERROR = 4
+    private val allSongsObserver = Observer { songs: ArrayList<Song>? ->
+        allSongs = songs?.map { item -> MediaMetadataCompat.Builder().from(item).build() } ?: emptyList()
+        postValue(SourceChange(allSongs, recentlyAdded, playlists))
+    }
 
-/**
- * Base class for music sources in UAMP.
- */
-abstract class AbstractMusicSource : MusicSource {
-    @State
-    var state: Int = STATE_CREATED
-        set(value) {
-            if (value == STATE_INITIALIZED || value == STATE_ERROR) {
-                synchronized(onReadyListeners) {
-                    field = value
-                    onReadyListeners.forEach { listener ->
-                        listener(state == STATE_INITIALIZED)
-                    }
-                }
-            } else {
-                field = value
-            }
-        }
+    private val recentlyAddedObserver = Observer { songs: ArrayList<Song>? ->
+        recentlyAdded = songs?.map { item -> MediaMetadataCompat.Builder().from(item).build() } ?: emptyList()
+        postValue(SourceChange(allSongs, recentlyAdded, playlists))
+    }
 
-    private val onReadyListeners = mutableListOf<(Boolean) -> Unit>()
+    private val playlistsObserver = Observer { songs: ArrayList<Song>? ->
+        postValue(SourceChange(allSongs, recentlyAdded, playlists))
+    }
 
-    /**
-     * Performs an action when this MusicSource is ready.
-     *
-     * This method is *not* threadsafe. Ensure actions and state changes are only performed
-     * on a single thread.
-     */
-    override fun whenReady(performAction: (Boolean) -> Unit): Boolean =
-        when (state) {
-            STATE_CREATED, STATE_INITIALIZING -> {
-                onReadyListeners += performAction
-                false
-            }
-            else -> {
-                performAction(state != STATE_ERROR)
-                true
-            }
-        }
+    override fun onActive() {
+        allSongProvider.observeForever(allSongsObserver)
+        recentlyAddedProvider.observeForever(recentlyAddedObserver)
+        playlistsProvider.observeForever(playlistsObserver)
+    }
+
+    override fun onInactive() {
+        allSongProvider.removeObserver(allSongsObserver)
+        recentlyAddedProvider.removeObserver(recentlyAddedObserver)
+        playlistsProvider.removeObserver(playlistsObserver)
+    }
 
     /**
      * Handles searching a [MusicSource] from a focused voice search, often coming
      * from the Google Assistant.
      */
-    override fun search(query: String, extras: Bundle): List<MediaMetadataCompat> {
+    override fun search(query: String, extras: Bundle?): List<MediaMetadataCompat> {
         // First attempt to search with the "focus" that's provided in the extras.
-        val focusSearchResult = when (extras[MediaStore.EXTRA_MEDIA_FOCUS]) {
+        val focusSearchResult = when (extras?.get(MediaStore.EXTRA_MEDIA_FOCUS)) {
             MediaStore.Audio.Artists.ENTRY_CONTENT_TYPE -> {
                 // For an Artist focused search, only the artist is set.
                 val artist = extras[MediaStore.EXTRA_MEDIA_ARTIST]
@@ -145,7 +110,7 @@ abstract class AbstractMusicSource : MusicSource {
                 Log.d(TAG, "Unfocused search for '$query'")
                 filter { song ->
                     song.title.containsCaseInsensitive(query)
-                            || song.genre.containsCaseInsensitive(query)
+                            || song.artist.containsCaseInsensitive(query)
                 }
             } else {
                 // If the user asked to "play music", or something similar, the query will also
@@ -158,6 +123,32 @@ abstract class AbstractMusicSource : MusicSource {
             return focusSearchResult
         }
     }
+
+    override fun iterator(): Iterator<MediaMetadataCompat> = allSongs.iterator()
+
+    data class SourceChange(val allSongs: List<MediaMetadataCompat>? = null, val recentlyAdded: List<MediaMetadataCompat>? = null, val playlists: Map<String, List<MediaMetadataCompat>>? = null)
+}
+
+fun MediaMetadataCompat.Builder.from(song: Song): MediaMetadataCompat.Builder {
+    id = song.mediaId.toString()
+    title = song.title
+    artist = song.artist
+    album = song.album
+    if (song.duration != -1) {
+        duration = song.duration.toLong()
+    }
+    mediaUri = song.mediaUri.toString()
+    albumArtUri = song.artUri.toString()
+    flag = MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
+
+    displayTitle = song.title
+    displaySubtitle = song.artist
+    displayDescription = song.album
+    displayIconUri = song.artUri.toString()
+
+    downloadStatus = MediaDescriptionCompat.STATUS_DOWNLOADED
+
+    return this
 }
 
 private const val TAG = "MusicSource"

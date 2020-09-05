@@ -25,28 +25,21 @@ import com.liadpaz.music.R
 import com.liadpaz.music.repository.Repository
 import com.liadpaz.music.service.utils.BrowseTree
 import com.liadpaz.music.service.utils.FileMusicSource
-import com.liadpaz.music.service.utils.MusicSource
 import com.liadpaz.music.service.utils.ROOT
 import com.liadpaz.music.utils.extensions.flag
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import kotlin.time.ExperimentalTime
 
 class MusicService : MediaBrowserServiceCompat() {
 
     private lateinit var notificationManager: NotificationManager
-    private lateinit var mediaSource: MusicSource
-
-    private val serviceJob = SupervisorJob()
-    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
+    private val musicSource: FileMusicSource by lazy {
+        FileMusicSource(this, repository)
+    }
 
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var mediaSessionConnector: MediaSessionConnector
 
     private val browseTree: BrowseTree by lazy {
-        BrowseTree(mediaSource)
+        BrowseTree(musicSource)
     }
 
     private var isForegroundService: Boolean = false
@@ -71,14 +64,11 @@ class MusicService : MediaBrowserServiceCompat() {
     private val permissionGrantedObserver = Observer<Boolean> {
         if (it && permissionGranted != it) {
             permissionGranted = it
-//            serviceScope.launch {
-//                mediaSource.load()
-//            }
         }
     }
 
     private val repository by lazy {
-        Repository.getInstance(applicationContext)
+        Repository.getInstance(this)
     }
 
     override fun onCreate() {
@@ -101,9 +91,8 @@ class MusicService : MediaBrowserServiceCompat() {
         notificationManager =
             NotificationManager(applicationContext, exoPlayer, mediaSession.sessionToken, PlayerNotificationListener())
 
-        mediaSource = FileMusicSource(applicationContext)
-        serviceScope.launch {
-            mediaSource.load()
+        browseTree.onUpdate { what ->
+            notifyChildrenChanged(what)
         }
 
         mediaSessionConnector = MediaSessionConnector(mediaSession).also { connector ->
@@ -135,7 +124,7 @@ class MusicService : MediaBrowserServiceCompat() {
 
         Log.d(TAG, "onDestroy: ")
 
-        serviceJob.cancel()
+        browseTree.release()
 
         exoPlayer.removeListener(playerListener)
         exoPlayer.release()
@@ -145,17 +134,11 @@ class MusicService : MediaBrowserServiceCompat() {
         BrowserRoot(ROOT, bundleOf(Pair("android.media.browse.SEARCH_SUPPORTED", true), Pair("android.media.browse.CONTENT_STYLE_SUPPORTED", true)))
 
     override fun onLoadChildren(parentId: String, result: Result<List<MediaBrowserCompat.MediaItem>>) {
-        val resultSent = mediaSource.whenReady {
-            result.sendResult(browseTree[parentId]?.map { item -> MediaBrowserCompat.MediaItem(item.description, item.flag) })
-        }
-
-        if (!resultSent) {
-            result.detach()
-        }
+        result.sendResult(browseTree[parentId]?.map { item -> MediaBrowserCompat.MediaItem(item.description, item.flag) })
     }
 
-    override fun onSearch(query: String, extras: Bundle?, result: Result<MutableList<MediaBrowserCompat.MediaItem>>): Nothing {
-        TODO("implement search option")
+    override fun onSearch(query: String, extras: Bundle?, result: Result<List<MediaBrowserCompat.MediaItem>>) {
+        result.sendResult(browseTree.search(query, extras).map { item -> MediaBrowserCompat.MediaItem(item.description, item.flag) })
     }
 
     private inner class PlayerNotificationListener : PlayerNotificationManager.NotificationListener {
@@ -242,19 +225,19 @@ class MusicService : MediaBrowserServiceCompat() {
                 }
             }
             Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
+            exoPlayer.retry()
         }
     }
 
     class QueueEditor(private val playbackPreparer: PlaybackPreparer) : MediaSessionConnector.QueueEditor {
-        @ExperimentalTime
         override fun onCommand(player: Player, controlDispatcher: ControlDispatcher, command: String, extras: Bundle?, cb: ResultReceiver?): Boolean =
             when (command) {
                 ACTION_REMOVE_ITEM -> {
-                    extras?.let { playbackPreparer.removeQueueItem(it.getInt(EXTRA_QUEUE_POSITION)) }
+                    playbackPreparer.removeQueueItem(extras!!.getInt(EXTRA_QUEUE_POSITION))
                     true
                 }
                 ACTION_MOVE_ITEM -> {
-                    extras?.let { playbackPreparer.moveQueueItem(it.getInt(EXTRA_FROM_POSITION), it.getInt(EXTRA_TO_POSITION)) }
+                    playbackPreparer.moveQueueItem(extras!!.getInt(EXTRA_FROM_POSITION), extras.getInt(EXTRA_TO_POSITION))
                     true
                 }
                 else -> false

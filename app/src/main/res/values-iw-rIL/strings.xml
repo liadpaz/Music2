@@ -18,4 +18,11 @@
     <string name="description_drop_down">מוריד את מסך המתנגן כעת ללמטה</string>
     <string name="description_drag">מאפשר לגרור את השיר</string>
     <string name="description_art_preview">תמונה של השיר</string>
+    <string name="menu_play_next">נגן הבא</string>
+    <string name="menu_add_to_queue">הוסף לתור</string>
+    <string name="menu_go_album">לאלבום</string>
+    <string name="menu_go_artist">לאומן</string>
+    <string name="menu_add_to_playlist">הוסף לפלייליסט</string>
+    <string name="menu_settings">הגדרות</string>
+    <string name="playlist_recently_added">נוספו לאחרונה</string>
 </resources>

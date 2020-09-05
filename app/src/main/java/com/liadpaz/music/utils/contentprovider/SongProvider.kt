@@ -2,17 +2,51 @@ package com.liadpaz.music.utils.contentprovider
 
 import android.content.ContentUris
 import android.content.Context
+import android.database.ContentObserver
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
-import android.util.Log
+import androidx.annotation.StringDef
+import androidx.lifecycle.LiveData
 import com.liadpaz.music.data.Song
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class SongProvider(private val context: Context, var sortOrder: String = DEFAULT_ORDER, var folder: String = DEFAULT_FOLDER) {
+class SongProvider(private val context: Context, @Order var sortOrder: String = ORDER_DEFAULT, var folder: String = FOLDER_DEFAULT) : LiveData<ArrayList<Song>?>() {
 
-    suspend fun getContentProviderValue(): ArrayList<Song>? = withContext(Dispatchers.IO) {
+    private val contentObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+        override fun onChange(selfChange: Boolean) {
+            CoroutineScope(Dispatchers.Main).launch {
+                postValue(getContentProviderValue())
+            }
+        }
+
+        override fun onChange(selfChange: Boolean, uri: Uri?) {
+            CoroutineScope(Dispatchers.Main).launch {
+                postValue(getContentProviderValue())
+            }
+        }
+    }
+
+    init {
+        CoroutineScope(Dispatchers.Main).launch {
+            postValue(getContentProviderValue())
+        }
+    }
+
+    override fun onActive() {
+        context.contentResolver.registerContentObserver(mediaStoreUri, true, contentObserver)
+    }
+
+    override fun onInactive() {
+        context.contentResolver.unregisterContentObserver(contentObserver)
+    }
+
+    private suspend fun getContentProviderValue(): ArrayList<Song>? = withContext(Dispatchers.IO) {
         context.contentResolver.query(mediaStoreUri, PROJECTION, "_data like ?", arrayOf("%$folder%"), sortOrder)?.use { cursor ->
             val songs = arrayListOf<Song>()
             if (cursor.moveToFirst()) {
@@ -33,7 +67,6 @@ class SongProvider(private val context: Context, var sortOrder: String = DEFAULT
                             cursor.getString(albumIndex),
                             Uri.parse("content://media/external/audio/albumart/${cursor.getInt(albumIdIndex)}"),
                             if (durationIndex != -1) {
-                                Log.d(TAG, "getContentProviderValue: ")
                                 cursor.getInt(durationIndex)
                             } else -1
                         )
@@ -48,13 +81,17 @@ class SongProvider(private val context: Context, var sortOrder: String = DEFAULT
         private val PROJECTION =
             arrayOf(MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.ARTIST, MediaStore.Audio.Media.ALBUM, MediaStore.Audio.Media.ALBUM_ID)
 
-        const val DEFAULT_ORDER = "${MediaStore.Audio.Media.TITLE} COLLATE NOCASE ASC"
-
-        const val DEFAULT_FOLDER = "Music"
+        const val FOLDER_DEFAULT = "Music"
 
         private val mediaStoreUri =
             if (Build.VERSION.SDK_INT >= 29) MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL) else MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
     }
 }
+
+const val ORDER_DEFAULT = "${MediaStore.Audio.Media.TITLE} COLLATE NOCASE ASC"
+const val ORDER_LAST_ADDED = "${MediaStore.Audio.Media.DATE_MODIFIED} DESC"
+
+@StringDef(value = [ORDER_DEFAULT, ORDER_LAST_ADDED])
+annotation class Order
 
 private const val TAG = "ContentProviderLiveData"

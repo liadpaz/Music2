@@ -6,6 +6,7 @@ import android.os.ResultReceiver
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import com.google.android.exoplayer2.ControlDispatcher
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
@@ -15,6 +16,8 @@ import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.liadpaz.music.service.utils.ARTISTS_ROOT
 import com.liadpaz.music.service.utils.BrowseTree
+import com.liadpaz.music.service.utils.PLAYLISTS_ROOT
+import com.liadpaz.music.service.utils.findValueByKey
 import com.liadpaz.music.utils.extensions.*
 
 class PlaybackPreparer(private val browseTree: BrowseTree, private val exoPlayer: ExoPlayer, private val dataSourceFactory: DefaultDataSourceFactory) : MediaSessionConnector.PlaybackPreparer {
@@ -36,7 +39,7 @@ class PlaybackPreparer(private val browseTree: BrowseTree, private val exoPlayer
             item.id == mediaId
         }!!
         val metadataList = when (extras?.getString(EXTRA_FROM)) {
-            EXTRA_FROM_PLAYLISTS -> TODO("implement custom playlists")
+            EXTRA_FROM_PLAYLISTS -> buildPlaylistWithPlaylist((extras[EXTRA_PLAYLIST] as String).substring(PLAYLISTS_ROOT.length)).apply { if (shuffle) shuffled() }
             EXTRA_FROM_ALBUMS -> buildPlaylistWithAlbum(itemToPlay).apply { if (shuffle) shuffled() }
             EXTRA_FROM_ARTISTS -> buildPlaylistWithArtist((extras[EXTRA_ARTIST] as String).substring(ARTISTS_ROOT.length)).apply { if (shuffle) shuffled() }
             else -> browseTree.toList().apply { if (shuffle) shuffled() }
@@ -44,9 +47,7 @@ class PlaybackPreparer(private val browseTree: BrowseTree, private val exoPlayer
 
         mediaSource = ConcatenatingMediaSource(*metadataList.toMediaSources(dataSourceFactory).toTypedArray())
 
-        val initialWindowIndex =
-            extras?.getInt(EXTRA_POSITION, metadataList.indexOf(itemToPlay))
-                ?: metadataList.indexOf(itemToPlay)
+        val initialWindowIndex = extras?.getInt(EXTRA_POSITION, metadataList.indexOf(itemToPlay)) ?: metadataList.indexOf(itemToPlay)
 
         exoPlayer.prepare(mediaSource)
         exoPlayer.seekTo(initialWindowIndex, 0)
@@ -65,14 +66,23 @@ class PlaybackPreparer(private val browseTree: BrowseTree, private val exoPlayer
     override fun onCommand(player: Player, controlDispatcher: ControlDispatcher, command: String, extras: Bundle?, cb: ResultReceiver?): Boolean =
         false
 
+    private fun buildPlaylistWithPlaylist(playlistName: String): List<MediaMetadataCompat> {
+        Log.d(TAG, "buildPlaylistWithPlaylist: $playlistName")
+        return when (playlistName) {
+            PLAYLIST_RECENTLY_ADDED -> browseTree.recentlyAdded
+            else -> browseTree.playlists.findValueByKey { it.description.title == playlistName }!!
+        }
+    }
+
     private fun buildPlaylistWithAlbum(item: MediaMetadataCompat): List<MediaMetadataCompat> =
-        browseTree.filter { it.album == item.album }
+        browseTree.albums.findValueByKey { it.album == item.album }!!
 
     private fun buildPlaylistWithArtist(artist: String): List<MediaMetadataCompat> =
-        browseTree.filter { it.artist.containsCaseInsensitive(artist) }
+        browseTree.artists.findValueByKey { it.artist.containsCaseInsensitive(artist) }!!
 
     fun addQueueItem(item: MediaDescriptionCompat, position: Int) =
         mediaSource.addMediaSource(position, item.toMediaSource(dataSourceFactory))
+
 
     fun addQueueItem(item: MediaDescriptionCompat) =
         mediaSource.addMediaSource(item.toMediaSource(dataSourceFactory))
@@ -82,6 +92,7 @@ class PlaybackPreparer(private val browseTree: BrowseTree, private val exoPlayer
     fun removeQueueItem(position: Int): MediaSource = mediaSource.removeMediaSource(position)
 }
 
+const val PLAYLIST_RECENTLY_ADDED = "playlist_recently_added"
 
 const val EXTRA_FROM = "from"
 const val EXTRA_FROM_ALL = "all"
@@ -90,6 +101,7 @@ const val EXTRA_FROM_ALBUMS = "albums"
 const val EXTRA_FROM_ARTISTS = "artists"
 
 const val EXTRA_ARTIST = "artist"
+const val EXTRA_PLAYLIST = "playlist"
 const val EXTRA_SHUFFLE = "shuffle"
 const val EXTRA_POSITION = "position"
 

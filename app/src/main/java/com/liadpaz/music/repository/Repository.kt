@@ -4,6 +4,7 @@ import android.content.Context
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.liadpaz.music.utils.contentprovider.SongProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -14,6 +15,11 @@ class Repository private constructor(private val context: Context) {
         postValue(false)
     }
     val granted: LiveData<Boolean> = _granted
+
+    private val _folder = MutableLiveData<String>().apply {
+        postValue(SongProvider.FOLDER_DEFAULT)
+    }
+    val folder: LiveData<String> = _folder
 
     private val _queue = MutableLiveData<List<MediaSessionCompat.QueueItem>>()
     val queue: LiveData<List<MediaSessionCompat.QueueItem>> = _queue

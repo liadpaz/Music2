@@ -300,6 +300,10 @@
                 android:alpha="1"
                 app:framePosition="99"
                 app:motionTarget="@id/ivArtPreview" />
+            <KeyAttribute
+                android:alpha="0"
+                app:framePosition="99"
+                app:motionTarget="@id/viewPager" />
         </KeyFrameSet>
     </Transition>
 

@@ -12,7 +12,7 @@ import com.liadpaz.music.service.EXTRA_FROM_ALL
 import com.liadpaz.music.service.ServiceConnection
 import com.liadpaz.music.service.utils.ALL_SONGS_ROOT
 
-class SongsViewModel(private val serviceConnection: ServiceConnection, private val repository: Repository) : ViewModel() {
+class SongsViewModel(private val serviceConnection: ServiceConnection) : ViewModel() {
 
     private val subscriptionCallback = object : MediaBrowserCompat.SubscriptionCallback() {
         override fun onChildrenLoaded(parentId: String, children: MutableList<MediaBrowserCompat.MediaItem>) =
@@ -38,6 +38,6 @@ class SongsViewModel(private val serviceConnection: ServiceConnection, private v
     class Factory(private val serviceConnection: ServiceConnection, private val repository: Repository) : ViewModelProvider.NewInstanceFactory() {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            SongsViewModel(serviceConnection, repository) as T
+            SongsViewModel(serviceConnection) as T
     }
 }
