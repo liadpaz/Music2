@@ -2,6 +2,8 @@ package com.liadpaz.music.utils.extensions
 
 import android.graphics.Color
 import android.net.Uri
+import android.view.LayoutInflater
+import android.view.ViewGroup
 import androidx.annotation.ColorInt
 import androidx.palette.graphics.Palette
 import java.util.*
@@ -38,3 +40,6 @@ private fun isDarkColor(@ColorInt colorInt: Int): Boolean =
     (0.2126 * Color.red(colorInt) + 0.7152 * Color.green(colorInt) + 0.0722 * Color.blue(colorInt)) > 0.5
 
 fun Int?.isNullOrZero(): Boolean = this == null || this == 0
+
+val ViewGroup.layoutInflater: LayoutInflater
+    get() = LayoutInflater.from(this.context)

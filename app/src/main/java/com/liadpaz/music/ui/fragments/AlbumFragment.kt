@@ -38,9 +38,7 @@ class AlbumFragment : Fragment() {
         binding.lifecycleOwner = viewLifecycleOwner
         binding.viewModel = viewModel
 
-        binding.rvSongs.adapter = SongsAdapter({ mediaItem, _ ->
-            viewModel.play(mediaItem)
-        }) { anchor, mediaItem ->
+        binding.rvSongs.adapter = SongsAdapter(viewModel::play, { anchor, mediaItem ->
             PopupMenu(requireContext(), anchor, Gravity.NO_GRAVITY, android.R.attr.contextPopupMenuStyle, android.R.attr.contextPopupMenuStyle).apply {
                 inflate(R.menu.menu_song)
                 menu.findItem(R.id.menu_go_to_album).isVisible = false
@@ -57,7 +55,7 @@ class AlbumFragment : Fragment() {
                     true
                 }
             }.show()
-        }
+        }, viewModel::playShuffle)
         binding.rvSongs.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
         binding.rvSongs.updatePadding(bottom = requireActivity().resources.let { it.getDimensionPixelSize(it.getIdentifier("navigation_bar_height", "dimen", "android")) + it.getDimension(R.dimen.bottomSheetHeight).toInt() })
     }

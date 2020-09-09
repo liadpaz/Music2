@@ -25,4 +25,12 @@
     <string name="menu_add_to_playlist">הוסף לפלייליסט</string>
     <string name="menu_settings">הגדרות</string>
     <string name="playlist_recently_added">נוספו לאחרונה</string>
+    <string name="shuffle">ערבוב</string>
+    <string name="playlist_create_new">צור פלייליסט חדש</string>
+    <string name="description_playlist_cover">תמונה של הפלייליסט</string>
+    <string name="dialog_cancel">ביטול</string>
+    <string name="dialog_create">צור</string>
+    <string name="dialog_enter_playlist_name">הכנס את שם הפלייליסט:</string>
+    <string name="dialog_apply">החל שינוים</string>
+    <string name="dialog_delete_playlist">מחק פלייליסט</string>
 </resources>

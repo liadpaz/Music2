@@ -1,6 +1,7 @@
 package com.liadpaz.music.utils
 
 import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.recyclerview.widget.DiffUtil
 
@@ -11,7 +12,7 @@ object C {
             oldItem.mediaId == newItem.mediaId
 
         override fun areContentsTheSame(oldItem: MediaBrowserCompat.MediaItem, newItem: MediaBrowserCompat.MediaItem): Boolean =
-            false //oldItem.description == newItem.description // TODO: implement
+            equals(oldItem.description, newItem.description)
     }
 
     val queueDiffCallback = object : DiffUtil.ItemCallback<MediaSessionCompat.QueueItem>() {
@@ -19,6 +20,9 @@ object C {
             oldItem.queueId == newItem.queueId
 
         override fun areContentsTheSame(oldItem: MediaSessionCompat.QueueItem, newItem: MediaSessionCompat.QueueItem): Boolean =
-            false //oldItem.description == newItem.description // TODO: implement
+            equals(oldItem.description, newItem.description)
     }
 }
+
+private fun equals(media1: MediaDescriptionCompat, media2: MediaDescriptionCompat): Boolean =
+    media1.title == media2.title && media1.description == media2.description && media1.subtitle == media2.subtitle && media1.mediaId == media2.mediaId

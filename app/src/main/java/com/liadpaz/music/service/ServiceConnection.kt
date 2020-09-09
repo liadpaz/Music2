@@ -17,7 +17,6 @@ import androidx.lifecycle.MutableLiveData
 import com.liadpaz.music.service.MusicService.QueueEditor.Companion.ACTION_MOVE_ITEM
 import com.liadpaz.music.service.MusicService.QueueEditor.Companion.ACTION_REMOVE_ITEM
 import com.liadpaz.music.service.MusicService.QueueEditor.Companion.EXTRA_FROM_POSITION
-import com.liadpaz.music.service.MusicService.QueueEditor.Companion.EXTRA_QUEUE_POSITION
 import com.liadpaz.music.service.MusicService.QueueEditor.Companion.EXTRA_TO_POSITION
 import com.liadpaz.music.utils.extensions.id
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -59,7 +58,7 @@ class ServiceConnection private constructor(context: Context, serviceComponent: 
         mediaController?.addQueueItem(item, position)
 
     fun removeQueueItemAt(position: Int) =
-        sendCommand(ACTION_REMOVE_ITEM, bundleOf(EXTRA_QUEUE_POSITION to position))
+        sendCommand(ACTION_REMOVE_ITEM, bundleOf(EXTRA_POSITION to position))
 
     fun moveQueueItem(fromPosition: Int, toPosition: Int) =
         sendCommand(ACTION_MOVE_ITEM, bundleOf(EXTRA_FROM_POSITION to fromPosition, EXTRA_TO_POSITION to toPosition))
@@ -122,9 +121,9 @@ class ServiceConnection private constructor(context: Context, serviceComponent: 
         @Volatile
         private var instance: ServiceConnection? = null
 
-        fun getInstance(context: Context, serviceComponent: ComponentName): ServiceConnection =
+        fun getInstance(context: Context): ServiceConnection =
             instance ?: synchronized(this) {
-                instance ?: ServiceConnection(context, serviceComponent).also { instance = it }
+                instance ?: ServiceConnection(context, ComponentName(context, MusicService::class.java)).also { instance = it }
             }
     }
 }
@@ -134,7 +133,7 @@ val EMPTY_PLAYBACK_STATE: PlaybackStateCompat = PlaybackStateCompat.Builder()
     .build()
 
 val NOTHING_PLAYING: MediaMetadataCompat = MediaMetadataCompat.Builder()
-    .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, "")
+    .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, null)
     .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, 0)
     .build()
 

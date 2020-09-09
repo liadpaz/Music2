@@ -42,7 +42,7 @@
             app:uri="@{viewModel.mediaMetadata.albumArtUri}" />
 
         <TextView
-            android:id="@+id/tvSongTitle"
+            android:id="@+id/tvSongTitleSmall"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
@@ -57,7 +57,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/tvSongArtist"
+            android:id="@+id/tvSongArtistSmall"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"

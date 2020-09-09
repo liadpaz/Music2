@@ -3,17 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <ConstraintSet android:id="@+id/collapsed">
-        <Constraint android:id="@+id/tvSongTitle">
-            <CustomAttribute
-                app:attributeName="textSize"
-                app:customFloatValue="18" />
-        </Constraint>
 
-        <Constraint android:id="@+id/tvSongArtist">
-            <CustomAttribute
-                app:attributeName="textSize"
-                app:customFloatValue="18" />
-        </Constraint>
+
     </ConstraintSet>
 
     <ConstraintSet android:id="@+id/expanded">
@@ -23,8 +14,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
             android:layout_marginEnd="32dp"
-            android:alpha="0"
-            app:layout_constraintBottom_toTopOf="@id/tvSongTitle"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toTopOf="@id/layoutLargeText"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/guidelineTopScreen"
@@ -35,34 +26,30 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="visible"
-            app:layout_constraintBottom_toTopOf="@id/tvSongTitle"
+            app:layout_constraintBottom_toTopOf="@id/layoutLargeText"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/guidelineTopScreen"
             app:layout_constraintVertical_bias="0.7" />
 
         <Constraint
-            android:id="@+id/tvSongTitle"
+            android:id="@+id/layoutSmallText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="16dp"
-            app:layout_constraintBottom_toTopOf="@id/tvSongArtist"
-            app:layout_constraintEnd_toEndOf="@id/seekBar"
-            app:layout_constraintStart_toStartOf="@id/seekBar">
-            <CustomAttribute
-                app:attributeName="textSize"
-                app:customFloatValue="22" />
-        </Constraint>
+            android:layout_marginStart="72dp"
+            android:layout_marginEnd="72dp"
+            android:visibility="invisible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="parent" />
 
         <Constraint
-            android:id="@+id/tvSongArtist"
+            android:id="@+id/layoutLargeText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
-            android:layout_marginBottom="16dp"
+            android:visibility="visible"
             app:layout_constraintBottom_toTopOf="@id/seekBar"
             app:layout_constraintEnd_toEndOf="@id/seekBar"
             app:layout_constraintStart_toStartOf="@id/seekBar" />
@@ -203,30 +190,14 @@
             app:layout_constraintTop_toBottomOf="parent" />
 
         <Constraint
-            android:id="@+id/tvSongTitle"
+            android:id="@+id/layoutLargeText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
-            android:layout_marginBottom="16dp"
             app:layout_constraintEnd_toEndOf="@id/seekBar"
             app:layout_constraintStart_toStartOf="@id/seekBar"
-            app:layout_constraintTop_toBottomOf="@id/viewPager">
-            <CustomAttribute
-                app:attributeName="textSize"
-                app:customFloatValue="22" />
-        </Constraint>
-
-        <Constraint
-            android:id="@+id/tvSongArtist"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="16dp"
-            app:layout_constraintEnd_toEndOf="@id/seekBar"
-            app:layout_constraintStart_toStartOf="@id/seekBar"
-            app:layout_constraintTop_toBottomOf="@id/tvSongTitle" />
+            app:layout_constraintTop_toBottomOf="@id/viewPager" />
 
         <Constraint
             android:id="@+id/seekBar"
@@ -238,7 +209,7 @@
             android:visibility="visible"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvSongArtist" />
+            app:layout_constraintTop_toBottomOf="@id/layoutLargeText" />
 
         <Constraint
             android:id="@+id/ibPlayPause"
@@ -298,7 +269,7 @@
         <KeyFrameSet>
             <KeyAttribute
                 android:alpha="1"
-                app:framePosition="99"
+                app:framePosition="100"
                 app:motionTarget="@id/ivArtPreview" />
             <KeyAttribute
                 android:alpha="0"
@@ -311,7 +282,7 @@
         android:id="@+id/transition_queue"
         app:constraintSetEnd="@id/queue_shown"
         app:constraintSetStart="@id/expanded"
-        app:duration="250">
+        app:duration="300">
         <OnClick
             app:clickAction="toggle"
             app:targetId="@id/ibToggleQueue" />

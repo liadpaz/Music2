@@ -9,6 +9,8 @@ def versionMajor = 1
 def versionMinor = 0
 def versionPatch = 0
 
+// TODO: change sdk version to 30 when finish
+
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
@@ -64,10 +66,10 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0'
     implementation 'androidx.lifecycle:lifecycle-service:2.2.0'
-    implementation "androidx.lifecycle:lifecycle-common-java8:2.2.0"
+    implementation 'androidx.lifecycle:lifecycle-common-java8:2.2.0'
 
-    // material design for beautiful ui
-    implementation 'com.google.android.material:material:1.2.0'
+    // material design for material ui
+    implementation 'com.google.android.material:material:1.2.1'
 
     // navigation component for easy navigation between fragments
     implementation 'androidx.navigation:navigation-fragment-ktx:2.3.0'
@@ -77,13 +79,16 @@ dependencies {
     // exoplayer
     implementation 'com.google.android.exoplayer:exoplayer:2.11.8'
     implementation 'com.google.android.exoplayer:exoplayer-ui:2.11.8'
-    implementation "com.google.android.exoplayer:extension-mediasession:2.11.8"
+    implementation 'com.google.android.exoplayer:extension-mediasession:2.11.8'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
     // glide for loading bitmaps efficiently
     implementation 'com.github.bumptech.glide:glide:4.11.0'
     implementation 'androidx.palette:palette-ktx:1.0.0'
     kapt 'com.github.bumptech.glide:compiler:4.11.0'
+
+    // gson for json serialization
+    implementation 'com.google.code.gson:gson:2.8.6'
 
     // tests
     testImplementation 'junit:junit:4.13'

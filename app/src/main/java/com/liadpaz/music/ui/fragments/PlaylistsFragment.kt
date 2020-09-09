@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.liadpaz.music.R
@@ -17,7 +18,9 @@ import com.liadpaz.music.utils.InjectorUtils
 
 class PlaylistsFragment : Fragment() {
 
-    private val viewModel by viewModels<PlaylistsViewModel> {
+    private val viewModel by viewModels<PlaylistsViewModel>({
+        ViewModelStoreOwner { requireActivity().viewModelStore }
+    }) {
         InjectorUtils.providePlaylistsViewModelFactory(requireContext())
     }
     private lateinit var binding: FragmentPlaylistsBinding
@@ -29,10 +32,12 @@ class PlaylistsFragment : Fragment() {
         binding.viewModel = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
 
-        binding.rvPlaylists.adapter = PlaylistsAdapter({ playlist ->
+        binding.rvPlaylists.adapter = PlaylistsAdapter(onPlaylistClick = { playlist ->
             findNavController().navigate(MainFragmentDirections.actionMainFragmentToPlaylistFragment(playlist))
-        }) { playlist ->
-            // TODO: implement long click on playlist (edit or delete playlist, if not recently added)
+        }, onPlaylistLongClick = { playlist ->
+            findNavController().navigate(MainFragmentDirections.actionMainFragmentToEditPlaylistDialog(playlist))
+        }) {
+            findNavController().navigate(MainFragmentDirections.actionMainFragmentToCreatePlaylistDialog())
         }
         binding.rvPlaylists.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
         binding.rvPlaylists.updatePadding(bottom = requireActivity().resources.let { it.getDimensionPixelSize(it.getIdentifier("navigation_bar_height", "dimen", "android")) + it.getDimension(R.dimen.bottomSheetHeight).toInt() })

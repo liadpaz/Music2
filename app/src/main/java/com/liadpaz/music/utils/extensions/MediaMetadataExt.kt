@@ -5,6 +5,7 @@ import android.net.Uri
 import android.support.v4.media.MediaBrowserCompat.MediaItem
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
+import com.google.android.exoplayer2.extractor.ExtractorsFactory
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DataSource
@@ -143,6 +144,13 @@ inline var MediaMetadataCompat.Builder.albumArt: Bitmap?
         putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, value)
     }
 
+inline var MediaMetadataCompat.Builder.art: Bitmap?
+    @Deprecated(NO_GET, level = DeprecationLevel.ERROR)
+    get() = throw IllegalAccessException("Cannot get from MediaMetadataCompat.Builder")
+    set(value) {
+        putBitmap(MediaMetadataCompat.METADATA_KEY_ART, value)
+    }
+
 inline var MediaMetadataCompat.Builder.displayTitle: String?
     @Deprecated(NO_GET, level = DeprecationLevel.ERROR)
     get() = throw IllegalAccessException("Cannot get from MediaMetadataCompat.Builder")
@@ -189,16 +197,16 @@ inline var MediaMetadataCompat.Builder.flag: Int
 inline val MediaMetadataCompat.fullDescription: MediaDescriptionCompat
     get() = description.also { it.extras?.putAll(bundle) }
 
-fun MediaDescriptionCompat.toMediaSource(dataSourceFactory: DataSource.Factory): ProgressiveMediaSource =
-    ProgressiveMediaSource.Factory(dataSourceFactory).setTag(this).createMediaSource(mediaUri)
+fun MediaDescriptionCompat.toMediaSource(dataSourceFactory: DataSource.Factory, extractorsFactory: ExtractorsFactory): ProgressiveMediaSource =
+    ProgressiveMediaSource.Factory(dataSourceFactory, extractorsFactory).setTag(this).createMediaSource(mediaUri)
 
-fun MediaMetadataCompat.toMediaSource(dataSourceFactory: DataSource.Factory): ProgressiveMediaSource =
-    ProgressiveMediaSource.Factory(dataSourceFactory).setTag(fullDescription).createMediaSource(mediaUri)
+fun MediaMetadataCompat.toMediaSource(dataSourceFactory: DataSource.Factory, extractorsFactory: ExtractorsFactory): ProgressiveMediaSource =
+    ProgressiveMediaSource.Factory(dataSourceFactory, extractorsFactory).setTag(fullDescription).createMediaSource(mediaUri)
 
-fun List<MediaMetadataCompat>.toMediaSources(dataSourceFactory: DataSource.Factory): List<MediaSource> {
+fun List<MediaMetadataCompat>.toMediaSources(dataSourceFactory: DataSource.Factory, extractorsFactory: ExtractorsFactory): List<MediaSource> {
     val mediaSources = mutableListOf<MediaSource>()
     forEach {
-        mediaSources.add(it.toMediaSource(dataSourceFactory))
+        mediaSources.add(it.toMediaSource(dataSourceFactory, extractorsFactory))
     }
     return mediaSources
 }

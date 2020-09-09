@@ -35,6 +35,12 @@
         <action
             android:id="@+id/action_mainFragment_to_playlistFragment"
             app:destination="@id/playlistFragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_createPlaylistDialog"
+            app:destination="@id/createPlaylistDialog" />
+        <action
+            android:id="@+id/action_mainFragment_to_editPlaylistDialog"
+            app:destination="@id/editPlaylistDialog" />
     </fragment>
     <fragment
         android:id="@+id/playlistFragment"
@@ -44,4 +50,18 @@
             android:name="playlist"
             app:argType="android.support.v4.media.MediaBrowserCompat$MediaItem" />
     </fragment>
+    <dialog
+        android:id="@+id/createPlaylistDialog"
+        android:name="com.liadpaz.music.ui.dialogs.CreatePlaylistDialog"
+        android:label="dialog_create_playlist"
+        tools:layout="@layout/dialog_create_playlist" />
+    <dialog
+        android:id="@+id/editPlaylistDialog"
+        android:name="com.liadpaz.music.ui.dialogs.EditPlaylistDialog"
+        android:label="dialog_edit_playlist"
+        tools:layout="@layout/dialog_edit_playlist">
+        <argument
+            android:name="playlist"
+            app:argType="android.support.v4.media.MediaBrowserCompat$MediaItem" />
+    </dialog>
 </navigation>

@@ -11,9 +11,9 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.SeekBar
 import android.widget.TextView
 import androidx.annotation.ColorInt
+import androidx.annotation.DrawableRes
 import androidx.databinding.BindingAdapter
 import androidx.palette.graphics.Palette
 import androidx.recyclerview.widget.RecyclerView
@@ -60,11 +60,15 @@ fun setPlayPause(imageButton: ImageButton, playbackState: PlaybackStateCompat?) 
         }
     ).into(imageButton)
 
+@BindingAdapter("resource")
+fun setResource(imageButton: ImageButton, @DrawableRes res: Int) =
+    GlideApp.with(imageButton).load(res).into(imageButton)
+
 @BindingAdapter("queue")
 fun setQueue(recyclerView: RecyclerView, queue: List<MediaSessionCompat.QueueItem>?) = (recyclerView.adapter as? QueueAdapter)?.submitList(queue)
 
 @BindingAdapter("max")
-fun setMax(seekBar: SeekBar, max: Number?) {
+fun setMax(seekBar: com.liadpaz.music.ui.utils.ProgressSeekBar, max: Number?) {
     seekBar.max = max?.toInt() ?: 0
 }
 
@@ -74,7 +78,7 @@ fun setTime(textView: TextView, time: Number?) {
 }
 
 @BindingAdapter("progress")
-fun setProgress(seekBar: SeekBar, progress: Number?) {
+fun setProgress(seekBar: com.liadpaz.music.ui.utils.ProgressSeekBar, progress: Number?) {
     seekBar.progress = progress?.toInt() ?: 0
 }
 

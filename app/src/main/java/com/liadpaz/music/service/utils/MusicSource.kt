@@ -9,54 +9,79 @@ import android.support.v4.media.MediaMetadataCompat
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
-import com.liadpaz.music.R
 import com.liadpaz.music.data.Song
 import com.liadpaz.music.repository.Repository
 import com.liadpaz.music.utils.contentprovider.ORDER_LAST_ADDED
 import com.liadpaz.music.utils.contentprovider.SongProvider
 import com.liadpaz.music.utils.extensions.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 interface MusicSource {
 
     fun search(query: String, extras: Bundle?): List<MediaMetadataCompat>
 }
 
-class FileMusicSource(context: Context, repository: Repository) : LiveData<FileMusicSource.SourceChange>(), MusicSource, Iterable<MediaMetadataCompat> {
+class FileMusicSource(context: Context, private val repository: Repository) : LiveData<FileMusicSource.SourceChange>(), MusicSource, Iterable<MediaMetadataCompat> {
 
-    val recentlyAddedName = context.getString(R.string.playlist_recently_added)
+    val recentlyAddedName = repository.recentlyAddedName
+
+    private val dataSharedPrefs by lazy {
+        DataSharedPrefs.getInstance(context)
+    }
 
     private val allSongProvider = SongProvider(context, folder = repository.folder.value!!)
     private val recentlyAddedProvider = SongProvider(context, folder = repository.folder.value!!, sortOrder = ORDER_LAST_ADDED)
     private val playlistsProvider = SongProvider(context, folder = "")
 
-    private var allSongs: List<MediaMetadataCompat> = emptyList()
+    private var songs: List<MediaMetadataCompat> = emptyList()
     private var recentlyAdded: List<MediaMetadataCompat> = emptyList()
-    private var playlists: HashMap<String, List<MediaMetadataCompat>> = hashMapOf()
+    private var allSongs: List<Song> = listOf()
+    private var playlistsIds: MutableList<Pair<String, MutableList<Int>>> = mutableListOf()
 
     private val allSongsObserver = Observer { songs: ArrayList<Song>? ->
-        allSongs = songs?.map { item -> MediaMetadataCompat.Builder().from(item).build() } ?: emptyList()
-        postValue(SourceChange(allSongs, recentlyAdded, playlists))
+        this.songs = songs?.map { item -> MediaMetadataCompat.Builder().from(item).build() } ?: emptyList()
+        postValue(SourceChange(this.songs, recentlyAdded, createPlaylists(playlistsIds)))
     }
 
     private val recentlyAddedObserver = Observer { songs: ArrayList<Song>? ->
         recentlyAdded = songs?.map { item -> MediaMetadataCompat.Builder().from(item).build() } ?: emptyList()
-        postValue(SourceChange(allSongs, recentlyAdded, playlists))
+        postValue(SourceChange(this.songs, recentlyAdded, createPlaylists(playlistsIds)))
     }
 
     private val playlistsObserver = Observer { songs: ArrayList<Song>? ->
-        postValue(SourceChange(allSongs, recentlyAdded, playlists))
+        allSongs = songs ?: mutableListOf()
+        postValue(SourceChange(this.songs, recentlyAdded, createPlaylists(playlistsIds)))
     }
+
+    private val repositoryObserver = Observer { playlists: MutableList<Pair<String, MutableList<Int>>>? ->
+        playlistsIds = playlists ?: mutableListOf()
+        CoroutineScope(Dispatchers.IO).launch {
+            dataSharedPrefs.setPlaylists(playlists)
+        }
+        postValue(SourceChange(this.songs, recentlyAdded, createPlaylists(playlistsIds)))
+    }
+
+    private fun createPlaylists(playlists: MutableList<Pair<String, MutableList<Int>>>?): List<Pair<String, List<MediaMetadataCompat>>>? =
+        playlists?.map { (name, songsIds) ->
+            name to songsIds.map { id -> MediaMetadataCompat.Builder().from(allSongs.find { it.mediaId.toInt() == id }!!).build() }
+        }
 
     override fun onActive() {
         allSongProvider.observeForever(allSongsObserver)
         recentlyAddedProvider.observeForever(recentlyAddedObserver)
         playlistsProvider.observeForever(playlistsObserver)
+        repository.playlists.observeForever(repositoryObserver)
+        playlistsIds = dataSharedPrefs.getPlaylists()
+        repository.setPlaylists(playlistsIds)
     }
 
     override fun onInactive() {
         allSongProvider.removeObserver(allSongsObserver)
         recentlyAddedProvider.removeObserver(recentlyAddedObserver)
         playlistsProvider.removeObserver(playlistsObserver)
+        repository.playlists.removeObserver(repositoryObserver)
     }
 
     /**
@@ -124,9 +149,9 @@ class FileMusicSource(context: Context, repository: Repository) : LiveData<FileM
         }
     }
 
-    override fun iterator(): Iterator<MediaMetadataCompat> = allSongs.iterator()
+    override fun iterator(): Iterator<MediaMetadataCompat> = songs.iterator()
 
-    data class SourceChange(val allSongs: List<MediaMetadataCompat>? = null, val recentlyAdded: List<MediaMetadataCompat>? = null, val playlists: Map<String, List<MediaMetadataCompat>>? = null)
+    data class SourceChange(val allSongs: List<MediaMetadataCompat>? = null, val recentlyAdded: List<MediaMetadataCompat>? = null, val playlists: List<Pair<String, List<MediaMetadataCompat>>>? = null)
 }
 
 fun MediaMetadataCompat.Builder.from(song: Song): MediaMetadataCompat.Builder {

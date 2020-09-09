@@ -12,19 +12,15 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="72dp"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true">
+        android:background="?attr/selectableItemBackground">
 
         <ImageView
             android:id="@+id/ivSongCover"
             android:layout_width="wrap_content"
             android:layout_height="0dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
             android:adjustViewBounds="true"
             android:contentDescription="@string/description_art_preview"
+            android:padding="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -38,10 +34,10 @@
             app:layout_constraintGuide_percent=".5" />
 
         <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/tvSongTitle"
+            android:id="@+id/tvSongTitleSmall"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="8dp"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="8dp"
             android:ellipsize="end"
@@ -55,7 +51,7 @@
             android:id="@+id/tvSongArtists"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="16dp"
             android:ellipsize="end"

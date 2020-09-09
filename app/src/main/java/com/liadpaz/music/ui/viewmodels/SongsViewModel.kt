@@ -7,9 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.liadpaz.music.repository.Repository
-import com.liadpaz.music.service.EXTRA_FROM
-import com.liadpaz.music.service.EXTRA_FROM_ALL
-import com.liadpaz.music.service.ServiceConnection
+import com.liadpaz.music.service.*
 import com.liadpaz.music.service.utils.ALL_SONGS_ROOT
 
 class SongsViewModel(private val serviceConnection: ServiceConnection) : ViewModel() {
@@ -28,8 +26,11 @@ class SongsViewModel(private val serviceConnection: ServiceConnection) : ViewMod
     }
     val songs: LiveData<ArrayList<MediaBrowserCompat.MediaItem>> = _songs
 
-    fun play(mediaItem: MediaBrowserCompat.MediaItem) =
-        serviceConnection.transportControls?.playFromMediaId(mediaItem.mediaId, bundleOf(Pair(EXTRA_FROM, EXTRA_FROM_ALL)))
+    fun play(mediaItem: MediaBrowserCompat.MediaItem, position: Int) =
+        serviceConnection.transportControls?.playFromMediaId(mediaItem.mediaId, bundleOf(EXTRA_FROM to EXTRA_FROM_ALL, EXTRA_POSITION to position))
+
+    fun playShuffle() =
+        serviceConnection.transportControls?.playFromMediaId(ALL_SONGS_ROOT, bundleOf(EXTRA_FROM to EXTRA_FROM_ALL, EXTRA_SHUFFLE to true))
 
     override fun onCleared() {
         serviceConnection.unsubscribe(ALL_SONGS_ROOT, subscriptionCallback)

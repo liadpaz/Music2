@@ -1,6 +1,7 @@
 package com.liadpaz.music.ui.viewmodels
 
 import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.MediaMetadataCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -17,6 +18,13 @@ class PlaylistsViewModel(private val serviceConnection: ServiceConnection, priva
     private val subscriptionCallback = object : MediaBrowserCompat.SubscriptionCallback() {
         override fun onChildrenLoaded(parentId: String, children: List<MediaBrowserCompat.MediaItem>) =
             _playlists.postValue(children)
+    }
+
+    fun createNewPlaylist(name: String, songs: MutableList<MediaMetadataCompat> = mutableListOf()): Boolean =
+        repository.createNewPlaylist(name, songs)
+
+    fun deletePlaylist(name: String) {
+        repository.deletePlaylist(name)
     }
 
     init {

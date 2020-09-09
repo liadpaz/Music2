@@ -25,4 +25,12 @@
     <string name="menu_add_to_playlist">Add to Playlist</string>
     <string name="menu_settings">Settings</string>
     <string name="playlist_recently_added">Recently Added</string>
+    <string name="shuffle">Shuffle</string>
+    <string name="playlist_create_new">Create new playlist</string>
+    <string name="description_playlist_cover">Playlist cover art</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_create">Create</string>
+    <string name="dialog_enter_playlist_name">Enter playlist name:</string>
+    <string name="dialog_apply">Apply</string>
+    <string name="dialog_delete_playlist">Delete Playlist</string>
 </resources>

@@ -36,11 +36,9 @@ class PlaylistFragment : Fragment() {
         binding.lifecycleOwner = viewLifecycleOwner
         binding.viewModel = viewModel
 
-        binding.rvSongs.adapter = SongsAdapter({ mediaItem, position ->
-            viewModel.play(mediaItem, position)
-        }) { anchor, mediaItem ->
+        binding.rvSongs.adapter = SongsAdapter(viewModel::play, { anchor, mediaItem ->
             // TODO: popup menu on item click (playlist menu)
-        }
+        }, viewModel::playShuffle)
         binding.rvSongs.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
         binding.rvSongs.updatePadding(bottom = requireActivity().resources.let { it.getDimensionPixelSize(it.getIdentifier("navigation_bar_height", "dimen", "android")) + it.getDimension(R.dimen.bottomSheetHeight).toInt() })
     }

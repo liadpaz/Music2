@@ -30,6 +30,9 @@ class PlaylistViewModel(private val serviceConnection: ServiceConnection, privat
     fun play(mediaItem: MediaBrowserCompat.MediaItem, position: Int) =
         serviceConnection.transportControls?.playFromMediaId(mediaItem.mediaId, bundleOf(EXTRA_FROM to EXTRA_FROM_PLAYLISTS, EXTRA_PLAYLIST to playlist, EXTRA_POSITION to position))
 
+    fun playShuffle() =
+        serviceConnection.transportControls?.playFromMediaId(playlist, bundleOf(EXTRA_FROM to EXTRA_FROM_PLAYLISTS, EXTRA_PLAYLIST to playlist, EXTRA_SHUFFLE to true))
+
     override fun onCleared() {
         serviceConnection.unsubscribe(playlist, subscriptionCallback)
     }

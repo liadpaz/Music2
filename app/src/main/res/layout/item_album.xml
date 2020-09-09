@@ -19,7 +19,7 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <com.google.android.material.textview.MaterialTextView
+            <TextView
                 android:id="@+id/tvAlbumName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -41,7 +41,7 @@
                 android:adjustViewBounds="true"
                 app:uri="@{album.description.iconUri}" />
 
-            <com.google.android.material.textview.MaterialTextView
+            <TextView
                 android:id="@+id/tvAlbumArtist"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

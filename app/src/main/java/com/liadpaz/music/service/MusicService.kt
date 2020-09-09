@@ -2,8 +2,10 @@ package com.liadpaz.music.service
 
 import android.app.Notification
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
 import android.os.ResultReceiver
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
@@ -16,16 +18,25 @@ import androidx.lifecycle.Observer
 import androidx.media.MediaBrowserServiceCompat
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
+import com.google.android.exoplayer2.audio.AudioRendererEventListener
+import com.google.android.exoplayer2.audio.MediaCodecAudioRenderer
+import com.google.android.exoplayer2.drm.DrmSessionManager
+import com.google.android.exoplayer2.drm.FrameworkMediaCrypto
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
+import com.google.android.exoplayer2.mediacodec.MediaCodecSelector
+import com.google.android.exoplayer2.metadata.MetadataOutput
+import com.google.android.exoplayer2.text.TextOutput
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
+import com.google.android.exoplayer2.video.VideoRendererEventListener
 import com.liadpaz.music.R
 import com.liadpaz.music.repository.Repository
 import com.liadpaz.music.service.utils.BrowseTree
 import com.liadpaz.music.service.utils.FileMusicSource
 import com.liadpaz.music.service.utils.ROOT
+import com.liadpaz.music.utils.GlideApp
 import com.liadpaz.music.utils.extensions.flag
 
 class MusicService : MediaBrowserServiceCompat() {
@@ -39,7 +50,13 @@ class MusicService : MediaBrowserServiceCompat() {
     private lateinit var mediaSessionConnector: MediaSessionConnector
 
     private val browseTree: BrowseTree by lazy {
-        BrowseTree(musicSource)
+        BrowseTree(musicSource) { what ->
+            notifyChildrenChanged(what)
+        }
+    }
+
+    private val glide by lazy {
+        GlideApp.with(this)
     }
 
     private var isForegroundService: Boolean = false
@@ -52,7 +69,7 @@ class MusicService : MediaBrowserServiceCompat() {
     private val playerListener = PlayerListener()
 
     private val exoPlayer by lazy {
-        SimpleExoPlayer.Builder(applicationContext).build().apply {
+        SimpleExoPlayer.Builder(applicationContext, AudioOnlyRenderersFactory(this)).build().apply {
             setAudioAttributes(mAudioAttributes, true)
             setHandleAudioBecomingNoisy(true)
             addListener(playerListener)
@@ -78,7 +95,7 @@ class MusicService : MediaBrowserServiceCompat() {
 
         val sessionActivityPendingIntent =
             packageManager?.getLaunchIntentForPackage(packageName)?.let { sessionIntent ->
-                PendingIntent.getActivity(this, 0, sessionIntent, 0)
+                PendingIntent.getActivity(this, 0, sessionIntent.putExtra(EXTRA_TYPE, this::class.java.canonicalName), PendingIntent.FLAG_UPDATE_CURRENT)
             }
 
         mediaSession = MediaSessionCompat(this, "MusicService").apply {
@@ -90,10 +107,6 @@ class MusicService : MediaBrowserServiceCompat() {
 
         notificationManager =
             NotificationManager(applicationContext, exoPlayer, mediaSession.sessionToken, PlayerNotificationListener())
-
-        browseTree.onUpdate { what ->
-            notifyChildrenChanged(what)
-        }
 
         mediaSessionConnector = MediaSessionConnector(mediaSession).also { connector ->
             val dataSourceFactory =
@@ -233,7 +246,7 @@ class MusicService : MediaBrowserServiceCompat() {
         override fun onCommand(player: Player, controlDispatcher: ControlDispatcher, command: String, extras: Bundle?, cb: ResultReceiver?): Boolean =
             when (command) {
                 ACTION_REMOVE_ITEM -> {
-                    playbackPreparer.removeQueueItem(extras!!.getInt(EXTRA_QUEUE_POSITION))
+                    playbackPreparer.removeQueueItem(extras!!.getInt(EXTRA_POSITION))
                     true
                 }
                 ACTION_MOVE_ITEM -> {
@@ -249,24 +262,41 @@ class MusicService : MediaBrowserServiceCompat() {
         override fun onAddQueueItem(player: Player, description: MediaDescriptionCompat, index: Int) =
             playbackPreparer.addQueueItem(description, index)
 
+        /**
+         * This function is unsupported, needs to user {@code ACTION_REMOVE_ITEM} and to use positional removal
+         */
         override fun onRemoveQueueItem(player: Player, description: MediaDescriptionCompat): Nothing =
-            throw UnsupportedOperationException()
+            throw UnsupportedOperationException("Needs to take position")
 
         companion object {
             const val ACTION_REMOVE_ITEM = "action_remove_item"
             const val ACTION_MOVE_ITEM = "action_move_item"
-            const val EXTRA_QUEUE_POSITION = "extra_queue_position"
             const val EXTRA_FROM_POSITION = "extra_from_position"
             const val EXTRA_TO_POSITION = "extra_to_position"
         }
     }
 
+    /**
+     * This class is for navigating the queue
+     */
     private class QueueNavigator(mediaSession: MediaSessionCompat) : TimelineQueueNavigator(mediaSession) {
-
         private val window = Timeline.Window()
 
         override fun getMediaDescription(player: Player, windowIndex: Int): MediaDescriptionCompat =
             player.currentTimeline.getWindow(windowIndex, window).tag as MediaDescriptionCompat
+    }
+
+    /**
+     * This class is for the [ExoPlayer], it is a [RenderersFactory] for audio only, as this app requires only audio.
+     * It is intended to save apk size.
+     */
+    private class AudioOnlyRenderersFactory(private val context: Context) : RenderersFactory {
+        override fun createRenderers(eventHandler: Handler, videoRendererEventListener: VideoRendererEventListener, audioRendererEventListener: AudioRendererEventListener, textRendererOutput: TextOutput, metadataRendererOutput: MetadataOutput, drmSessionManager: DrmSessionManager<FrameworkMediaCrypto>?): Array<Renderer> =
+            arrayOf(MediaCodecAudioRenderer(context, MediaCodecSelector.DEFAULT, eventHandler, audioRendererEventListener))
+    }
+
+    companion object {
+        const val EXTRA_TYPE = "extra_type"
     }
 }
 

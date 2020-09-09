@@ -14,15 +14,13 @@ import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.util.NotificationUtil
 import com.liadpaz.music.R
 import com.liadpaz.music.utils.GlideApp
+import com.liadpaz.music.utils.getBitmap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 class NotificationManager(context: Context, private val exoPlayer: ExoPlayer, sessionToken: MediaSessionCompat.Token, notificationListener: PlayerNotificationManager.NotificationListener) {
 
-    private val serviceJob = SupervisorJob()
-    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
     private val notificationManager: PlayerNotificationManager
     private val glide = GlideApp.with(context)
 
@@ -88,12 +86,9 @@ class NotificationManager(context: Context, private val exoPlayer: ExoPlayer, se
             val iconUri = controller.metadata.description.iconUri
             return if (currentIconUri != iconUri || currentBitmap == null) {
                 currentIconUri = iconUri
-                serviceScope.launch {
+                CoroutineScope(Dispatchers.IO).launch {
                     iconUri?.let { uri ->
-                        currentBitmap =
-                            com.liadpaz.music.utils.Util.getBitmap(glide, uri, errorDrawable = R.drawable.ic_album_color).also {
-                                callback.onBitmap(it)
-                            }
+                        callback.onBitmap(getBitmap(glide, uri, errorDrawable = R.drawable.ic_album_color).also { currentBitmap = it })
                     }
                 }
                 currentBitmap

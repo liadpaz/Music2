@@ -10,15 +10,15 @@ import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import androidx.lifecycle.*
 import androidx.palette.graphics.Palette
 import com.liadpaz.music.repository.Repository
 import com.liadpaz.music.service.EMPTY_PLAYBACK_STATE
-import com.liadpaz.music.service.NOTHING_PLAYING
 import com.liadpaz.music.service.ServiceConnection
 import com.liadpaz.music.utils.GlideApp
-import com.liadpaz.music.utils.Util
 import com.liadpaz.music.utils.extensions.*
+import com.liadpaz.music.utils.getBitmap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -58,11 +58,10 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
 
     private val playbackStateObserver = Observer<PlaybackStateCompat> {
         _playbackState.postValue(it ?: EMPTY_PLAYBACK_STATE)
-        val metadata = serviceConnection.nowPlaying.value ?: NOTHING_PLAYING
-        updateState(metadata)
     }
 
     private val mediaMetadataObserver = Observer<MediaMetadataCompat> {
+        Log.d(TAG, "media metadata changed")
         updateState(it)
     }
 
@@ -113,7 +112,7 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
     }
 
     private fun updateState(mediaMetadata: MediaMetadataCompat) {
-        if (mediaMetadata.duration != 0L && mediaMetadata.id != null) {
+        if (mediaMetadata.duration > 0L && mediaMetadata.id != null) {
             CoroutineScope(Dispatchers.IO).launch {
                 _mediaMetadata.postValue(
                     NowPlayingMetadata(
@@ -122,7 +121,7 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
                         mediaMetadata.title?.trim(),
                         mediaMetadata.displaySubtitle?.trim(),
                         mediaMetadata.duration,
-                        Palette.from(Util.getBitmap(GlideApp.with(getApplication() as Context), mediaMetadata.albumArtUri)).generate()
+                        Palette.from(getBitmap(GlideApp.with(getApplication() as Context), mediaMetadata.albumArtUri)).generate()
                     )
                 )
             }
@@ -154,3 +153,5 @@ inline val PlaybackStateCompat.currentPlayBackPosition: Long
     }
 
 private const val POSITION_UPDATE_INTERVAL_MILLIS = 100L
+
+private const val TAG = "PlayingViewModel"

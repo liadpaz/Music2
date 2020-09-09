@@ -8,6 +8,7 @@ import android.media.AudioManager
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import android.view.View
 import android.widget.SeekBar
 import androidx.activity.viewModels
@@ -16,7 +17,6 @@ import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.motion.widget.TransitionAdapter
 import androidx.core.content.ContextCompat
 import androidx.core.view.updatePadding
-import androidx.lifecycle.Lifecycle
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -26,8 +26,11 @@ import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.liadpaz.music.R
 import com.liadpaz.music.databinding.ActivityMainBinding
+import com.liadpaz.music.service.MusicService
+import com.liadpaz.music.service.MusicService.Companion.EXTRA_TYPE
 import com.liadpaz.music.ui.adapters.ExtendedSongViewPagerAdapter
 import com.liadpaz.music.ui.adapters.QueueAdapter
+import com.liadpaz.music.ui.utils.ProgressSeekBar
 import com.liadpaz.music.ui.viewmodels.MainViewModel
 import com.liadpaz.music.ui.viewmodels.PlayingViewModel
 import com.liadpaz.music.utils.InjectorUtils
@@ -81,8 +84,10 @@ class MainActivity : AppCompatActivity() {
         binding.viewModel = playingViewModel
 
         // select the song title & song artist in order for the marquee to work
-        binding.tvSongTitle.isSelected = true
-        binding.tvSongArtist.isSelected = true
+        binding.tvSongTitleSmall.isSelected = true
+        binding.tvSongArtistSmall.isSelected = true
+        binding.tvSongTitleLarge.isSelected = true
+        binding.tvSongArtistLarge.isSelected = true
 
         // set the bottom guideline on the top of the navigation bar
         binding.guidelineBottomScreen.setGuidelineEnd(resources.getDimensionPixelSize(resources.getIdentifier("navigation_bar_height", "dimen", "android")))
@@ -104,9 +109,9 @@ class MainActivity : AppCompatActivity() {
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 isQueueChanging = true
-                val fromIndex = viewHolder.adapterPosition
-                (binding.rvQueue.adapter as QueueAdapter).onSwipe(fromIndex)
-                playingViewModel.removeQueueItem(fromIndex)
+                val position = viewHolder.adapterPosition
+                (binding.rvQueue.adapter as QueueAdapter).onSwipe(position)
+                playingViewModel.removeQueueItem(position)
             }
 
             override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
@@ -118,9 +123,12 @@ class MainActivity : AppCompatActivity() {
 
             override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
                 viewHolder.itemView.elevation = 0F
-                isQueueChanging = initialIndex != viewHolder.adapterPosition
                 if (initialIndex != -1) {
-                    playingViewModel.moveQueueItem(initialIndex, viewHolder.adapterPosition)
+                    isQueueChanging = initialIndex != viewHolder.adapterPosition
+                    if (isQueueChanging) {
+                        playingViewModel.moveQueueItem(initialIndex, viewHolder.adapterPosition)
+                    }
+                    initialIndex = -1
                 }
             }
         }).also { itemTouchHelper ->
@@ -134,13 +142,13 @@ class MainActivity : AppCompatActivity() {
         playingViewModel.queue.observe(this) {
             binding.viewPager.adapter = ExtendedSongViewPagerAdapter(this)
             binding.viewPager.setCurrentItem(playingViewModel.queuePosition.value ?: 0, false)
+            isQueueChanging = false
         }
         playingViewModel.queuePosition.observe(this) {
-            if (lifecycle.currentState < Lifecycle.State.RESUMED) {
-                smoothScroll = false
-            }
+            Log.d(TAG, "onCreate: $it")
             if (!isQueueChanging) {
                 binding.viewPager.setCurrentItem(it, smoothScroll)
+                smoothScroll = true
             } else {
                 isQueueChanging = false
             }
@@ -159,29 +167,32 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+        binding.viewPager.requestDisallowInterceptTouchEvent(true)
 
         binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar, position: Int, fromUser: Boolean) =
-                Unit
+            override fun onProgressChanged(seekBar: SeekBar, position: Int, fromUser: Boolean) = Unit
 
-            override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
+            override fun onStartTrackingTouch(seekBar: SeekBar) {
+                (seekBar as ProgressSeekBar).isUser = true
+            }
 
             override fun onStopTrackingTouch(seekBar: SeekBar) {
                 playingViewModel.seekTo(seekBar.progress * 1000L)
+                (seekBar as ProgressSeekBar).isUser = false
             }
         })
 
         playingViewModel.playbackState.observe(this) { playback: PlaybackStateCompat ->
             when (playback.state) {
-                PlaybackStateCompat.STATE_BUFFERING,
-                PlaybackStateCompat.STATE_PLAYING -> {
+                PlaybackStateCompat.STATE_NONE,
+                PlaybackStateCompat.STATE_STOPPED,
+                -> {
+                    bottomSheetState = BottomSheetBehavior.STATE_HIDDEN
+                }
+                else -> {
                     if (bottomSheetState == BottomSheetBehavior.STATE_HIDDEN) {
                         bottomSheetState = BottomSheetBehavior.STATE_COLLAPSED
                     }
-                }
-                PlaybackStateCompat.STATE_NONE,
-                PlaybackStateCompat.STATE_STOPPED -> {
-                    bottomSheetState = BottomSheetBehavior.STATE_HIDDEN
                 }
             }
         }
@@ -211,6 +222,7 @@ class MainActivity : AppCompatActivity() {
                 }
             })
         }
+        bottomSheet.peekHeight = resources.getDimensionPixelSize(resources.getIdentifier("navigation_bar_height", "dimen", "android")) + resources.getDimensionPixelSize(R.dimen.bottomSheetHeight)
 
         binding.bottomSheet.addTransitionListener(object : TransitionAdapter() {
             override fun onTransitionCompleted(motionLayout: MotionLayout, currentId: Int) {
@@ -223,13 +235,19 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            override fun onTransitionStarted(motionLayout: MotionLayout?, startId: Int, endId: Int) {
-                if (startId == R.id.expanded && endId == R.id.queue_shown) {
-                    (binding.rvQueue.layoutManager as? LinearLayoutManager)?.scrollToPositionWithOffset(playingViewModel.queuePosition.value
-                        ?: 0, 0)
+            override fun onTransitionStarted(motionLayout: MotionLayout, startId: Int, endId: Int) {
+                if (motionLayout.progress < 100F && startId == R.id.expanded && endId == R.id.queue_shown) {
+                    binding.rvQueue.stopScroll()
+                    (binding.rvQueue.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(playingViewModel.queuePosition.value!!, 0)
                 }
             }
         })
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        handleIntent(intent)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -244,9 +262,7 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
 
-        if (bottomSheetState == BottomSheetBehavior.STATE_COLLAPSED) {
-            bottomSheetState = BottomSheetBehavior.STATE_EXPANDED
-        }
+        handleIntent(intent)
     }
 
     override fun onBackPressed() {
@@ -256,6 +272,9 @@ class MainActivity : AppCompatActivity() {
             } else {
                 if (binding.bottomSheet.progress != 0F) {
                     binding.bottomSheet.progress = 0F
+                }
+                if (binding.bottomSheet.currentState != R.id.expanded) {
+                    binding.bottomSheet.setTransition(R.id.transition_bottomsheet)
                 }
                 bottomSheetState = BottomSheetBehavior.STATE_COLLAPSED
             }
@@ -270,6 +289,14 @@ class MainActivity : AppCompatActivity() {
         set(value) {
             bottomSheet.state = value
         }
+
+    private fun handleIntent(intent: Intent?) {
+        if (intent?.extras?.getString(EXTRA_TYPE) == MusicService::class.java.canonicalName) {
+            if (bottomSheetState == BottomSheetBehavior.STATE_COLLAPSED) {
+                bottomSheetState = BottomSheetBehavior.STATE_EXPANDED
+            }
+        }
+    }
 }
 
 private const val TAG = "MainActivityLog"

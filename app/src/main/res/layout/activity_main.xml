@@ -8,6 +8,8 @@
         <variable
             name="viewModel"
             type="com.liadpaz.music.ui.viewmodels.PlayingViewModel" />
+
+        <import type="com.liadpaz.music.R" />
     </data>
 
     <FrameLayout
@@ -55,8 +57,6 @@
                 android:id="@+id/bottomSheet"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:nestedScrollingEnabled="false"
-                android:orientation="vertical"
                 app:behavior_hideable="true"
                 app:behavior_peekHeight="@dimen/bottomSheetHeight"
                 app:gradientBackground="@{viewModel.mediaMetadata.palette}"
@@ -65,7 +65,7 @@
 
                 <androidx.constraintlayout.widget.Guideline
                     android:id="@+id/guideline4"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     app:layout_constraintGuide_begin="@dimen/bottomSheetHeight" />
@@ -74,12 +74,13 @@
                     android:id="@+id/viewPager"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_margin="8dp"
+                    android:nestedScrollingEnabled="true"
                     android:visibility="invisible"
-                    app:layout_constraintBottom_toBottomOf="@id/guidelineBottom"
-                    app:layout_constraintEnd_toStartOf="@+id/guideline4"
+                    app:layout_constraintBottom_toTopOf="@id/tvSongTitleSmall"
+                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toBottomOf="@id/guidelineTopScreen"
+                    app:layout_constraintVertical_bias="0.7" />
 
                 <ImageView
                     android:id="@+id/ivArtPreview"
@@ -95,37 +96,82 @@
                     app:layout_constraintTop_toTopOf="parent"
                     app:uri="@{viewModel.mediaMetadata.albumArtUri}" />
 
-                <TextView
-                    android:id="@+id/tvSongTitle"
+                <LinearLayout
+                    android:id="@+id/layoutSmallText"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:ellipsize="marquee"
-                    android:marqueeRepeatLimit="marquee_forever"
-                    android:scrollHorizontally="true"
-                    android:singleLine="true"
-                    android:text="@{viewModel.mediaMetadata.title}"
-                    app:layout_constraintBottom_toTopOf="@+id/tvSongArtist"
-                    app:layout_constraintEnd_toStartOf="@+id/ibPlayPause"
-                    app:layout_constraintStart_toStartOf="@+id/guideline4"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:layout_height="0dp"
+                    android:orientation="vertical"
+                    app:layout_constraintBottom_toBottomOf="@id/ivArtPreview"
+                    app:layout_constraintEnd_toStartOf="@id/ibPlayPause"
+                    app:layout_constraintStart_toStartOf="@id/guideline4"
+                    app:layout_constraintTop_toTopOf="@id/ivArtPreview">
 
-                <TextView
-                    android:id="@+id/tvSongArtist"
-                    android:layout_width="0dp"
+                    <TextView
+                        android:id="@+id/tvSongTitleSmall"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="top"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:scrollHorizontally="true"
+                        android:singleLine="true"
+                        android:text="@{viewModel.mediaMetadata.title}"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:id="@+id/tvSongArtistSmall"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:scrollHorizontally="true"
+                        android:singleLine="true"
+                        android:text="@{viewModel.mediaMetadata.artist}"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/layoutLargeText"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:ellipsize="marquee"
-                    android:marqueeRepeatLimit="marquee_forever"
-                    android:scrollHorizontally="true"
-                    android:singleLine="true"
-                    android:text="@{viewModel.mediaMetadata.artist}"
-                    app:layout_constraintBottom_toBottomOf="@id/guidelineBottom"
-                    app:layout_constraintEnd_toStartOf="@+id/ibPlayPause"
-                    app:layout_constraintStart_toStartOf="@+id/guideline4"
-                    app:layout_constraintTop_toBottomOf="@+id/tvSongTitle" />
+                    android:layout_margin="8dp"
+                    android:orientation="vertical"
+                    android:visibility="invisible"
+                    app:layout_constraintBottom_toTopOf="@id/seekBar"
+                    app:layout_constraintEnd_toEndOf="@id/seekBar"
+                    app:layout_constraintStart_toStartOf="@id/seekBar">
+
+                    <TextView
+                        android:id="@+id/tvSongTitleLarge"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:scrollHorizontally="true"
+                        android:singleLine="true"
+                        android:text="@{viewModel.mediaMetadata.title}"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvSongArtistLarge"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:scrollHorizontally="true"
+                        android:singleLine="true"
+                        android:text="@{viewModel.mediaMetadata.artist}"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
                 <androidx.constraintlayout.widget.Guideline
                     android:id="@+id/guidelineBottom"
@@ -149,16 +195,17 @@
                     app:layout_constraintBottom_toTopOf="@id/guidelineBottom"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:playPause="@{viewModel.playbackState}"
-                    app:srcCompat="@drawable/ic_notification_play" />
+                    app:playPause="@{viewModel.playbackState}" />
 
-                <SeekBar
+                <com.liadpaz.music.ui.utils.ProgressSeekBar
                     android:id="@+id/seekBar"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="32dp"
-                    android:focusableInTouchMode="false"
-                    android:focusedByDefault="false"
+                    android:clickable="true"
+                    android:elevation="8dp"
+                    android:focusable="true"
+                    android:paddingVertical="8dp"
                     android:visibility="invisible"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -200,10 +247,10 @@
                     android:contentDescription="@string/description_skip_prev"
                     android:onClick="@{() -> viewModel.skipToPrev()}"
                     android:padding="8dp"
-                    android:src="@drawable/ic_skip_previous"
                     android:visibility="invisible"
                     app:layout_constraintStart_toStartOf="@id/seekBar"
-                    app:layout_constraintTop_toBottomOf="@id/seekBar" />
+                    app:layout_constraintTop_toBottomOf="@id/seekBar"
+                    app:resource="@{R.drawable.ic_skip_previous}" />
 
                 <ImageButton
                     android:id="@+id/ibSkipNext"
@@ -213,10 +260,10 @@
                     android:contentDescription="@string/description_skip_next"
                     android:onClick="@{() -> viewModel.skipToNext()}"
                     android:padding="8dp"
-                    android:src="@drawable/ic_skip_next"
                     android:visibility="invisible"
                     app:layout_constraintEnd_toEndOf="@id/seekBar"
-                    app:layout_constraintTop_toBottomOf="@id/seekBar" />
+                    app:layout_constraintTop_toBottomOf="@id/seekBar"
+                    app:resource="@{R.drawable.ic_skip_next}" />
 
                 <ImageButton
                     android:id="@+id/ibRepeat"
@@ -226,7 +273,6 @@
                     android:contentDescription="@string/description_repeat"
                     android:onClick="@{() -> viewModel.toggleRepeatMode()}"
                     android:padding="8dp"
-                    android:src="@drawable/ic_repeat"
                     android:visibility="invisible"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="@id/ibSkipNext"
@@ -253,11 +299,11 @@
                     android:background="?selectableItemBackgroundBorderless"
                     android:contentDescription="@string/description_drop_down"
                     android:padding="8dp"
-                    android:src="@drawable/ic_drop_down"
                     android:visibility="invisible"
                     app:colorFilter="@{viewModel.mediaMetadata.palette.dominantSwatch.bodyTextColor}"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent" />
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:resource="@{R.drawable.ic_drop_down}" />
 
                 <ImageButton
                     android:id="@+id/ibMore"
@@ -267,11 +313,11 @@
                     android:background="?selectableItemBackgroundBorderless"
                     android:contentDescription="@string/description_more"
                     android:padding="8dp"
-                    android:src="@drawable/ic_more"
                     android:visibility="invisible"
                     app:colorFilter="@{viewModel.mediaMetadata.palette.dominantSwatch.bodyTextColor}"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent" />
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:resource="@{R.drawable.ic_more}" />
 
                 <ImageButton
                     android:id="@+id/ibToggleQueue"
@@ -281,11 +327,11 @@
                     android:background="?selectableItemBackgroundBorderless"
                     android:contentDescription="@string/description_show_queue"
                     android:padding="8dp"
-                    android:src="@drawable/ic_queue_music"
                     android:visibility="invisible"
                     app:colorFilter="@{viewModel.mediaMetadata.palette.dominantSwatch.bodyTextColor}"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/ibMore" />
+                    app:layout_constraintEnd_toStartOf="@id/ibMore"
+                    app:resource="@{R.drawable.ic_queue_music}" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvQueue"
@@ -297,7 +343,7 @@
                     android:scrollbars="vertical"
                     android:visibility="invisible"
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                    app:layout_constraintBottom_toTopOf="@id/tvSongTitle"
+                    app:layout_constraintBottom_toTopOf="@id/tvSongTitleSmall"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/ibMore"
