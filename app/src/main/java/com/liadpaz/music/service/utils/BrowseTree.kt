@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
-import android.util.Log
 import androidx.lifecycle.Observer
 import com.liadpaz.music.data.findArtists
 import com.liadpaz.music.data.firstFirstArtist
@@ -51,11 +50,9 @@ class BrowseTree(private val musicSource: FileMusicSource, private val onUpdate:
                 list.forEach { mediaItem ->
                     songs.add(mediaItem)
 
-                    // adds the 'mediaItem' to the albums list
                     val album = _albums.findValueByKey { it.album == mediaItem.album } ?: buildAlbumRoot(mediaItem)
                     album += mediaItem
 
-                    // adds the 'mediaItem' to the artists list
                     mediaItem.findArtists().forEach { artist ->
                         val artistRoot = _artists.findValueByKey { it.artist == artist } ?: buildArtistRoot(artist)
                         artistRoot += mediaItem
@@ -73,6 +70,7 @@ class BrowseTree(private val musicSource: FileMusicSource, private val onUpdate:
             change.recentlyAdded?.let { list ->
                 _recentlyAdded.clear()
                 list.forEach { mediaItem ->
+
                     _recentlyAdded.add(mediaItem)
                 }
                 recentlyAddedMetadata.apply {
@@ -85,19 +83,17 @@ class BrowseTree(private val musicSource: FileMusicSource, private val onUpdate:
                 onUpdate("${PLAYLISTS_ROOT}${PLAYLIST_RECENTLY_ADDED}")
             }
             change.playlists?.let { list: List<Pair<String, List<MediaMetadataCompat>>> ->
-                Log.d(TAG, "sortSongs: playlist $list")
                 _playlists.clear()
                 list.forEach { (playlistName, playlistSongs) ->
                     val playlistRoot = _playlists.findValueByKey { it.title == playlistName } ?: buildPlaylistRoot(playlistName)
                     playlistRoot += playlistSongs
                     _playlists.find { it.title == playlistName }?.apply {
                         description?.extras?.let { extras ->
-                            extras.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, playlistSongs.getOrNull(0)?.artUri.toString())
+                            extras.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, playlistSongs.getOrNull(0)?.displayIconUri.toString())
                             extras.putInt(EXTRA_SONGS_NUM, playlistSongs.size)
                         }
                     }
                 }
-                Log.d(TAG, "sortSongs: $_playlists")
                 onUpdate(PLAYLISTS_ROOT)
             }
         }
@@ -111,11 +107,11 @@ class BrowseTree(private val musicSource: FileMusicSource, private val onUpdate:
             if (mediaId == PLAYLISTS_ROOT) {
                 _playlists.keys.toMutableList().apply { add(0, recentlyAddedMetadata) }
             } else {
-                val playlistName = mediaId.substring(PLAYLISTS_ROOT.length)
-                if (playlistName == PLAYLIST_RECENTLY_ADDED) {
+                val playlistId = mediaId.substring(PLAYLISTS_ROOT.length)
+                if (playlistId == PLAYLIST_RECENTLY_ADDED) {
                     _recentlyAdded
                 } else {
-                    _playlists.findValueByKey { it.title == playlistName }?.toList()
+                    _playlists.findValueByKey { it.title == playlistId }?.toList()
                 }
             }
         }
@@ -136,8 +132,7 @@ class BrowseTree(private val musicSource: FileMusicSource, private val onUpdate:
         else -> throw IllegalArgumentException("Invalid id entered: $mediaId")
     }
 
-    fun search(query: String, extras: Bundle?): List<MediaMetadataCompat> =
-        musicSource.search(query, extras)
+    fun search(query: String, extras: Bundle?): List<MediaMetadataCompat> = musicSource.search(query, extras)
 
     private fun buildRecentlyAddedMetadata(): MediaMetadataCompat = MediaMetadataCompat.Builder().apply {
         id = "${PLAYLISTS_ROOT}${PLAYLIST_RECENTLY_ADDED}"
@@ -215,16 +210,6 @@ inline fun Map<MediaMetadataCompat, List<MediaMetadataCompat>>.findValueByKey(cr
     for ((key, value) in this) {
         if (predicate(key)) {
             return value
-        }
-    }
-    return null
-}
-
-@JvmName("findImmutable")
-inline fun Map<MediaMetadataCompat, List<MediaMetadataCompat>>.find(crossinline predicate: (MediaMetadataCompat) -> Boolean): MediaMetadataCompat? {
-    for ((key, _) in this) {
-        if (predicate(key)) {
-            return key
         }
     }
     return null

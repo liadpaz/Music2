@@ -1,7 +1,6 @@
 package com.liadpaz.music.repository
 
 import android.content.Context
-import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -49,21 +48,29 @@ class Repository private constructor(context: Context) {
             }
         }
 
-    fun createNewPlaylist(name: String, songs: MutableList<MediaMetadataCompat> = mutableListOf()): Boolean {
-        if (name == recentlyAddedName) return false
+    /**
+     * This function creates a new playlist.
+     */
+    fun createNewPlaylist(name: String, songs: IntArray) {
         val playlists = _playlists.value ?: mutableListOf()
         if (playlists.find { pair -> pair.first == name } == null) {
-            _playlists.postValue(playlists.apply { add(0, Pair(name, songs.map { it.description.mediaId!!.toInt() }.toMutableList())) })
-            return true
+            _playlists.postValue(playlists.apply { add(0, Pair(name, songs.toMutableList())) })
         }
-        return false
     }
 
-    fun deletePlaylist(name: String): Pair<String, MutableList<Int>> {
+    fun addSongsToPlaylist(name: String, songs: IntArray) {
         val playlists = _playlists.value!!
-        val playlist = playlists.removeAt(playlists.indexOfFirst { (mName, _) -> mName == name })
+        val playlist = playlists.removeAt(playlists.indexOfFirst { it.first == name }).apply {
+            second.addAll(songs.toList())
+        }
+        playlists.add(0, playlist)
         _playlists.postValue(playlists)
-        return playlist
+    }
+
+    fun deletePlaylist(name: String) {
+        val playlists = _playlists.value!!
+        playlists.removeIf { (mName, _) -> mName == name }
+        _playlists.postValue(playlists)
     }
 
     fun setPlaylists(playlists: MutableList<Pair<String, MutableList<Int>>>) {
@@ -90,10 +97,9 @@ fun List<MediaSessionCompat.QueueItem>?.contentEquals(other: List<MediaSessionCo
 
     forEachIndexed { index, any ->
         if (other[index].description != any.description || other[index].queueId != any.queueId) {
-            return false
+            return@contentEquals false
         }
     }
-
     return true
 }
 

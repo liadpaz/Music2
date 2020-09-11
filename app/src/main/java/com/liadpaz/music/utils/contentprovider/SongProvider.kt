@@ -10,20 +10,19 @@ import android.os.Looper
 import android.provider.MediaStore
 import androidx.annotation.StringDef
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import com.liadpaz.music.data.Song
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class SongProvider(private val context: Context, @Order var sortOrder: String = ORDER_DEFAULT, var folder: String = FOLDER_DEFAULT) : LiveData<ArrayList<Song>?>() {
+class SongProvider(private val context: Context, @Order var sortOrder: String = ORDER_DEFAULT, val folderLiveData: LiveData<String>? = null) : LiveData<ArrayList<Song>?>() {
+
+    private var privateFolder = ""
 
     private val contentObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
-        override fun onChange(selfChange: Boolean) {
-            CoroutineScope(Dispatchers.Main).launch {
-                postValue(getContentProviderValue())
-            }
-        }
+        override fun onChange(selfChange: Boolean) = onChange(selfChange, null)
 
         override fun onChange(selfChange: Boolean, uri: Uri?) {
             CoroutineScope(Dispatchers.Main).launch {
@@ -31,23 +30,31 @@ class SongProvider(private val context: Context, @Order var sortOrder: String = 
             }
         }
     }
-
-    init {
+    private val folderObserver = Observer { folder: String ->
         CoroutineScope(Dispatchers.Main).launch {
+            privateFolder = folder
             postValue(getContentProviderValue())
         }
     }
 
     override fun onActive() {
         context.contentResolver.registerContentObserver(mediaStoreUri, true, contentObserver)
+        folderLiveData?.apply {
+            observeForever(folderObserver)
+            privateFolder = value!!
+        }
+        CoroutineScope(Dispatchers.Main).launch {
+            postValue(getContentProviderValue())
+        }
     }
 
     override fun onInactive() {
         context.contentResolver.unregisterContentObserver(contentObserver)
+        folderLiveData?.removeObserver(folderObserver)
     }
 
     private suspend fun getContentProviderValue(): ArrayList<Song>? = withContext(Dispatchers.IO) {
-        context.contentResolver.query(mediaStoreUri, PROJECTION, "_data like ?", arrayOf("%$folder%"), sortOrder)?.use { cursor ->
+        context.contentResolver.query(mediaStoreUri, PROJECTION, "_data like ?", arrayOf("%$privateFolder%"), sortOrder)?.use { cursor ->
             val songs = arrayListOf<Song>()
             if (cursor.moveToFirst()) {
                 val idIndex = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)

@@ -6,22 +6,18 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModelStoreOwner
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.liadpaz.music.R
 import com.liadpaz.music.databinding.FragmentPlaylistsBinding
 import com.liadpaz.music.ui.adapters.PlaylistsAdapter
-import com.liadpaz.music.ui.viewmodels.PlaylistsViewModel
+import com.liadpaz.music.ui.viewmodels.MainViewModel
 import com.liadpaz.music.utils.InjectorUtils
 
 class PlaylistsFragment : Fragment() {
-
-    private val viewModel by viewModels<PlaylistsViewModel>({
-        ViewModelStoreOwner { requireActivity().viewModelStore }
-    }) {
-        InjectorUtils.providePlaylistsViewModelFactory(requireContext())
+    private val viewModel by activityViewModels<MainViewModel> {
+        InjectorUtils.provideMainViewModelFactory(requireContext())
     }
     private lateinit var binding: FragmentPlaylistsBinding
 

@@ -115,7 +115,6 @@
                         android:layout_marginEnd="8dp"
                         android:ellipsize="marquee"
                         android:marqueeRepeatLimit="marquee_forever"
-                        android:scrollHorizontally="true"
                         android:singleLine="true"
                         android:text="@{viewModel.mediaMetadata.title}"
                         android:textSize="18sp" />
@@ -129,7 +128,6 @@
                         android:layout_marginEnd="8dp"
                         android:ellipsize="marquee"
                         android:marqueeRepeatLimit="marquee_forever"
-                        android:scrollHorizontally="true"
                         android:singleLine="true"
                         android:text="@{viewModel.mediaMetadata.artist}"
                         android:textSize="18sp" />
@@ -153,7 +151,6 @@
                         android:layout_marginBottom="16dp"
                         android:ellipsize="marquee"
                         android:marqueeRepeatLimit="marquee_forever"
-                        android:scrollHorizontally="true"
                         android:singleLine="true"
                         android:text="@{viewModel.mediaMetadata.title}"
                         android:textSize="22sp"
@@ -166,7 +163,6 @@
                         android:layout_marginBottom="16dp"
                         android:ellipsize="marquee"
                         android:marqueeRepeatLimit="marquee_forever"
-                        android:scrollHorizontally="true"
                         android:singleLine="true"
                         android:text="@{viewModel.mediaMetadata.artist}"
                         android:textSize="18sp"
@@ -188,7 +184,7 @@
                     android:layout_marginTop="8dp"
                     android:layout_marginEnd="8dp"
                     android:layout_marginBottom="8dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:background="?selectableItemBackgroundBorderless"
                     android:contentDescription="@string/description_play_pause"
                     android:onClick="@{() -> viewModel.playPause()}"
                     android:padding="8dp"
@@ -243,7 +239,7 @@
                     android:id="@+id/ibSkipPrev"
                     android:layout_width="64dp"
                     android:layout_height="64dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:background="?selectableItemBackgroundBorderless"
                     android:contentDescription="@string/description_skip_prev"
                     android:onClick="@{() -> viewModel.skipToPrev()}"
                     android:padding="8dp"
@@ -256,7 +252,7 @@
                     android:id="@+id/ibSkipNext"
                     android:layout_width="64dp"
                     android:layout_height="64dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:background="?selectableItemBackgroundBorderless"
                     android:contentDescription="@string/description_skip_next"
                     android:onClick="@{() -> viewModel.skipToNext()}"
                     android:padding="8dp"
@@ -300,9 +296,9 @@
                     android:contentDescription="@string/description_drop_down"
                     android:padding="8dp"
                     android:visibility="invisible"
-                    app:colorFilter="@{viewModel.mediaMetadata.palette.dominantSwatch.bodyTextColor}"
-                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:buttonColorFilter="@{viewModel.mediaMetadata.palette.dominantSwatch.bodyTextColor}"
                     app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
                     app:resource="@{R.drawable.ic_drop_down}" />
 
                 <ImageButton
@@ -314,9 +310,9 @@
                     android:contentDescription="@string/description_more"
                     android:padding="8dp"
                     android:visibility="invisible"
-                    app:colorFilter="@{viewModel.mediaMetadata.palette.dominantSwatch.bodyTextColor}"
-                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:buttonColorFilter="@{viewModel.mediaMetadata.palette.dominantSwatch.bodyTextColor}"
                     app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
                     app:resource="@{R.drawable.ic_more}" />
 
                 <ImageButton
@@ -328,9 +324,9 @@
                     android:contentDescription="@string/description_show_queue"
                     android:padding="8dp"
                     android:visibility="invisible"
-                    app:colorFilter="@{viewModel.mediaMetadata.palette.dominantSwatch.bodyTextColor}"
-                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:buttonColorFilter="@{viewModel.mediaMetadata.palette.dominantSwatch.bodyTextColor}"
                     app:layout_constraintEnd_toStartOf="@id/ibMore"
+                    app:layout_constraintTop_toTopOf="parent"
                     app:resource="@{R.drawable.ic_queue_music}" />
 
                 <androidx.recyclerview.widget.RecyclerView

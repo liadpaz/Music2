@@ -11,7 +11,14 @@
         tools:layout="@layout/fragment_album">
         <argument
             android:name="album"
-            app:argType="android.support.v4.media.MediaBrowserCompat$MediaItem" />
+            app:argType="string" />
+        <action
+            android:id="@+id/action_albumFragment_to_artistFragment"
+            app:destination="@id/artistFragment"
+            app:popUpTo="@id/mainFragment" />
+        <action
+            android:id="@+id/action_albumFragment_to_goToArtistDialog"
+            app:destination="@id/goToArtistDialog" />
     </fragment>
     <fragment
         android:id="@+id/artistFragment"
@@ -19,7 +26,11 @@
         tools:layout="@layout/fragment_artist">
         <argument
             android:name="artist"
-            app:argType="android.support.v4.media.MediaBrowserCompat$MediaItem" />
+            app:argType="string" />
+        <action
+            android:id="@+id/action_artistFragment_to_albumFragment"
+            app:destination="@id/albumFragment"
+            app:popUpTo="@id/mainFragment" />
     </fragment>
     <fragment
         android:id="@+id/mainFragment"
@@ -41,6 +52,12 @@
         <action
             android:id="@+id/action_mainFragment_to_editPlaylistDialog"
             app:destination="@id/editPlaylistDialog" />
+        <action
+            android:id="@+id/action_mainFragment_to_addPlaylistDialog"
+            app:destination="@id/addPlaylistDialog" />
+        <action
+            android:id="@+id/action_mainFragment_to_goToArtistDialog"
+            app:destination="@id/goToArtistDialog" />
     </fragment>
     <fragment
         android:id="@+id/playlistFragment"
@@ -49,12 +66,26 @@
         <argument
             android:name="playlist"
             app:argType="android.support.v4.media.MediaBrowserCompat$MediaItem" />
+        <action
+            android:id="@+id/action_playlistFragment_to_albumFragment"
+            app:destination="@id/albumFragment"
+            app:popUpTo="@id/mainFragment" />
+        <action
+            android:id="@+id/action_playlistFragment_to_artistFragment"
+            app:destination="@id/artistFragment"
+            app:popUpTo="@id/mainFragment" />
     </fragment>
     <dialog
         android:id="@+id/createPlaylistDialog"
         android:name="com.liadpaz.music.ui.dialogs.CreatePlaylistDialog"
         android:label="dialog_create_playlist"
-        tools:layout="@layout/dialog_create_playlist" />
+        tools:layout="@layout/dialog_create_playlist">
+        <argument
+            android:name="songs"
+            android:defaultValue="@null"
+            app:argType="integer[]"
+            app:nullable="true" />
+    </dialog>
     <dialog
         android:id="@+id/editPlaylistDialog"
         android:name="com.liadpaz.music.ui.dialogs.EditPlaylistDialog"
@@ -62,6 +93,34 @@
         tools:layout="@layout/dialog_edit_playlist">
         <argument
             android:name="playlist"
+            app:argType="android.support.v4.media.MediaBrowserCompat$MediaItem" />
+    </dialog>
+    <dialog
+        android:id="@+id/addPlaylistDialog"
+        android:name="com.liadpaz.music.ui.dialogs.AddPlaylistDialog"
+        android:label="dialog_add_playlist"
+        tools:layout="@layout/dialog_add_playlist">
+        <argument
+            android:name="songs"
+            android:defaultValue="@null"
+            app:argType="integer[]"
+            app:nullable="true" />
+        <action
+            android:id="@+id/action_addPlaylistDialog_to_createPlaylistDialog"
+            app:destination="@id/createPlaylistDialog"
+            app:popUpTo="@id/mainFragment" />
+    </dialog>
+    <dialog
+        android:id="@+id/goToArtistDialog"
+        android:name="com.liadpaz.music.ui.dialogs.GoToArtistDialog"
+        android:label="dialog_go_to_artist"
+        tools:layout="@layout/dialog_go_to_artist">
+        <action
+            android:id="@+id/action_goToArtistDialog_to_artistFragment"
+            app:destination="@id/artistFragment"
+            app:popUpTo="@id/mainFragment" />
+        <argument
+            android:name="song"
             app:argType="android.support.v4.media.MediaBrowserCompat$MediaItem" />
     </dialog>
 </navigation>

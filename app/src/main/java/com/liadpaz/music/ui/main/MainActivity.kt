@@ -67,8 +67,8 @@ class MainActivity : AppCompatActivity() {
         navController.addOnDestinationChangedListener { _, destination, arguments ->
             supportActionBar?.title = when (destination.id) {
                 R.id.playlistFragment -> arguments?.getParcelable<MediaBrowserCompat.MediaItem>("playlist")?.description?.title
-                R.id.artistFragment -> arguments?.getParcelable<MediaBrowserCompat.MediaItem>("artist")?.description?.subtitle
-                R.id.albumFragment -> arguments?.getParcelable<MediaBrowserCompat.MediaItem>("album")?.description?.description
+                R.id.artistFragment -> arguments?.getString("artist")
+                R.id.albumFragment -> arguments?.getString("album")
                 else -> getString(R.string.app_name)
             }
         }
@@ -246,7 +246,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-
         handleIntent(intent)
     }
 
@@ -261,7 +260,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-
         handleIntent(intent)
     }
 

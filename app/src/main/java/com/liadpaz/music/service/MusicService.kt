@@ -36,7 +36,6 @@ import com.liadpaz.music.repository.Repository
 import com.liadpaz.music.service.utils.BrowseTree
 import com.liadpaz.music.service.utils.FileMusicSource
 import com.liadpaz.music.service.utils.ROOT
-import com.liadpaz.music.utils.GlideApp
 import com.liadpaz.music.utils.extensions.flag
 
 class MusicService : MediaBrowserServiceCompat() {
@@ -55,9 +54,10 @@ class MusicService : MediaBrowserServiceCompat() {
         }
     }
 
-    private val glide by lazy {
-        GlideApp.with(this)
-    }
+//    private val glide by lazy {
+//        GlideApp.with(this)
+//    }
+    // TODO: use glide to load art for session metadata
 
     private var isForegroundService: Boolean = false
 

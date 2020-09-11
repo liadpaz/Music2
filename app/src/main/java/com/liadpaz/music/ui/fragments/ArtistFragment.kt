@@ -9,6 +9,7 @@ import android.widget.PopupMenu
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.liadpaz.music.R
@@ -20,11 +21,10 @@ import com.liadpaz.music.utils.InjectorUtils
 import com.liadpaz.music.utils.extensions.isNullOrZero
 
 class ArtistFragment : Fragment() {
-
     private val navArgs by navArgs<ArtistFragmentArgs>()
 
     private val viewModel by viewModels<ArtistViewModel> {
-        InjectorUtils.provideArtistViewModelFactory(requireContext(), navArgs.artist.mediaId!!)
+        InjectorUtils.provideArtistViewModelFactory(requireContext(), navArgs.artist)
     }
     private val playingViewModel by viewModels<PlayingViewModel> {
         InjectorUtils.providePlayingViewModelFactory(requireActivity().application)
@@ -50,7 +50,8 @@ class ArtistFragment : Fragment() {
                     when (menuItem.itemId) {
                         R.id.menu_play_next -> playingViewModel.addNextQueueItem(mediaItem.description)
                         R.id.menu_add_to_queue -> playingViewModel.addQueueItem(mediaItem.description)
-                        R.id.menu_go_to_album -> TODO("implement")
+                        R.id.menu_go_to_album -> findNavController().navigate(ArtistFragmentDirections.actionArtistFragmentToAlbumFragment(mediaItem.description.description.toString()))
+                        R.id.menu_add_to_playlist -> findNavController().navigate(MainFragmentDirections.actionMainFragmentToAddPlaylistDialog(intArrayOf(mediaItem.mediaId!!.toInt())))
                     }
                     true
                 }

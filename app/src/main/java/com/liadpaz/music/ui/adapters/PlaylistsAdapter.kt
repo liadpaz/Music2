@@ -28,6 +28,11 @@ class PlaylistsAdapter(private val onPlaylistClick: (MediaBrowserCompat.MediaIte
 
     override fun getItemViewType(position: Int): Int = if (position == 0) TYPE_CREATE else TYPE_PLAYLIST
 
+    companion object {
+        private const val TYPE_CREATE = 1
+        private const val TYPE_PLAYLIST = 2
+    }
+
     class PlaylistViewHolder private constructor(private val binding: ItemPlaylistBinding, onPlaylistClick: (MediaBrowserCompat.MediaItem) -> Unit, onPlaylistLongClick: (MediaBrowserCompat.MediaItem) -> Unit) : RecyclerView.ViewHolder(binding.root) {
         init {
             binding.root.setOnClickListener { onPlaylistClick(binding.playlist!!) }
@@ -62,6 +67,3 @@ class PlaylistsAdapter(private val onPlaylistClick: (MediaBrowserCompat.MediaIte
         }
     }
 }
-
-private const val TYPE_CREATE = 1
-private const val TYPE_PLAYLIST = 2

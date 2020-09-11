@@ -5,7 +5,7 @@
 
         <variable
             name="viewModel"
-            type="com.liadpaz.music.ui.viewmodels.AlbumsViewModel" />
+            type="com.liadpaz.music.ui.viewmodels.MainViewModel" />
     </data>
 
     <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -21,7 +21,6 @@
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:orientation="vertical"
-            android:paddingBottom="@dimen/bottomSheetHeight"
             app:albums="@{viewModel.albums}"
             app:layoutManager="androidx.recyclerview.widget.GridLayoutManager" />
     </FrameLayout>

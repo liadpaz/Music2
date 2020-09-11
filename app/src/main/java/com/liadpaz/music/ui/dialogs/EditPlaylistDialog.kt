@@ -5,20 +5,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModelStoreOwner
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.navArgs
 import com.liadpaz.music.databinding.DialogEditPlaylistBinding
 import com.liadpaz.music.ui.viewmodels.PlaylistsViewModel
 import com.liadpaz.music.utils.InjectorUtils
 
 class EditPlaylistDialog : DialogFragment() {
-
     private val args by navArgs<EditPlaylistDialogArgs>()
 
-    private val viewModel by viewModels<PlaylistsViewModel>({
-        ViewModelStoreOwner { requireActivity().viewModelStore }
-    }) {
+    private val viewModel by activityViewModels<PlaylistsViewModel> {
         InjectorUtils.providePlaylistsViewModelFactory(requireContext())
     }
     private lateinit var binding: DialogEditPlaylistBinding
@@ -30,7 +26,7 @@ class EditPlaylistDialog : DialogFragment() {
         binding.etPlaylistName.setText(args.playlist.description.title.toString())
         binding.btnCancel.setOnClickListener { dismiss() }
         binding.btnApply.setOnClickListener {
-            // TODO: implement
+            // TODO: implement edit playlist
         }
         binding.btnDelete.setOnClickListener {
             viewModel.deletePlaylist(args.playlist.description.title.toString())

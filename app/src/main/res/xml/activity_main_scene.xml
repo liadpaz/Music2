@@ -275,6 +275,18 @@
                 android:alpha="0"
                 app:framePosition="99"
                 app:motionTarget="@id/viewPager" />
+            <KeyAttribute
+                android:alpha="0"
+                app:framePosition="65"
+                app:motionTarget="@id/ibDown" />
+            <KeyAttribute
+                android:alpha="0"
+                app:framePosition="65"
+                app:motionTarget="@id/ibMore" />
+            <KeyAttribute
+                android:alpha="0"
+                app:framePosition="65"
+                app:motionTarget="@id/ibToggleQueue" />
         </KeyFrameSet>
     </Transition>
 

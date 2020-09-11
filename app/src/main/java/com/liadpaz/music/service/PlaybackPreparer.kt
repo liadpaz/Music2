@@ -19,7 +19,9 @@ import com.google.android.exoplayer2.extractor.wav.WavExtractor
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.liadpaz.music.service.utils.*
+import com.liadpaz.music.service.utils.BrowseTree
+import com.liadpaz.music.service.utils.PLAYLISTS_ROOT
+import com.liadpaz.music.service.utils.findValueByKey
 import com.liadpaz.music.utils.extensions.*
 
 class PlaybackPreparer(private val browseTree: BrowseTree, private val exoPlayer: SimpleExoPlayer, private val dataSourceFactory: DefaultDataSourceFactory) : MediaSessionConnector.PlaybackPreparer {
@@ -40,8 +42,8 @@ class PlaybackPreparer(private val browseTree: BrowseTree, private val exoPlayer
 
         val metadataList = when (extras?.getString(EXTRA_FROM)) {
             EXTRA_FROM_PLAYLISTS -> buildPlaylistWithPlaylist((extras[EXTRA_PLAYLIST] as String).substring(PLAYLISTS_ROOT.length)).apply { if (shuffle) shuffle() }
-            EXTRA_FROM_ALBUMS -> buildPlaylistWithAlbum((extras[EXTRA_ALBUM] as String).substring(ALBUMS_ROOT.length)).apply { if (shuffle) shuffle() }
-            EXTRA_FROM_ARTISTS -> buildPlaylistWithArtist((extras[EXTRA_ARTIST] as String).substring(ARTISTS_ROOT.length)).apply { if (shuffle) shuffle() }
+            EXTRA_FROM_ALBUMS -> buildPlaylistWithAlbum(extras[EXTRA_ALBUM] as String).apply { if (shuffle) shuffle() }
+            EXTRA_FROM_ARTISTS -> buildPlaylistWithArtist(extras[EXTRA_ARTIST] as String).apply { if (shuffle) shuffle() }
             else -> browseTree.toMutableList().apply { if (shuffle) shuffle() }
         }
 

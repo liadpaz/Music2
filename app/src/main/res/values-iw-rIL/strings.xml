@@ -30,7 +30,11 @@
     <string name="description_playlist_cover">תמונה של הפלייליסט</string>
     <string name="dialog_cancel">ביטול</string>
     <string name="dialog_create">צור</string>
-    <string name="dialog_enter_playlist_name">הכנס את שם הפלייליסט:</string>
+    <string name="dialog_playlist_name">שם הפלייליסט</string>
     <string name="dialog_apply">החל שינוים</string>
     <string name="dialog_delete_playlist">מחק פלייליסט</string>
+    <string name="dialog_select_playlist">בחר פלייליסט</string>
+    <string name="menu_search">חיפוש</string>
+    <string name="dialog_new_playlist">פלייליסט חדש</string>
+    <string name="dialog_select_artist">בחר אומן</string>
 </resources>

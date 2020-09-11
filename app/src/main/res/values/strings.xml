@@ -30,7 +30,11 @@
     <string name="description_playlist_cover">Playlist cover art</string>
     <string name="dialog_cancel">Cancel</string>
     <string name="dialog_create">Create</string>
-    <string name="dialog_enter_playlist_name">Enter playlist name:</string>
+    <string name="dialog_playlist_name">Playlist name</string>
     <string name="dialog_apply">Apply</string>
     <string name="dialog_delete_playlist">Delete Playlist</string>
+    <string name="dialog_select_playlist">Select Playlist</string>
+    <string name="dialog_new_playlist">New Playlist</string>
+    <string name="menu_search">Search</string>
+    <string name="dialog_select_artist">Select Artist</string>
 </resources>

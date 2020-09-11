@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.liadpaz.music.repository.Repository
 import com.liadpaz.music.service.*
+import com.liadpaz.music.service.utils.ARTISTS_ROOT
 
 class ArtistViewModel(private val serviceConnection: ServiceConnection, private val repository: Repository, private val artist: String) : ViewModel() {
 
@@ -17,7 +18,7 @@ class ArtistViewModel(private val serviceConnection: ServiceConnection, private 
     }
 
     init {
-        serviceConnection.subscribe(artist, subscriptionCallback)
+        serviceConnection.subscribe("${ARTISTS_ROOT}${artist}", subscriptionCallback)
     }
 
     private val _songs = MutableLiveData<List<MediaBrowserCompat.MediaItem>>().apply {

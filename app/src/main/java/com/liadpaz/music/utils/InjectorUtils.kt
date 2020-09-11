@@ -20,14 +20,8 @@ object InjectorUtils {
     fun providePlaylistViewModelFactory(context: Context, playlist: String) =
         PlaylistViewModel.Factory(ServiceConnection.getInstance(context), Repository.getInstance(context), playlist)
 
-    fun provideAlbumsViewModelFactory(context: Context) =
-        AlbumsViewModel.Factory(ServiceConnection.getInstance(context), Repository.getInstance(context))
-
     fun provideAlbumViewModelFactory(context: Context, album: String) =
         AlbumViewModel.Factory(ServiceConnection.getInstance(context), Repository.getInstance(context), album)
-
-    fun provideArtistsViewModelFactory(context: Context) =
-        ArtistsViewModel.Factory(ServiceConnection.getInstance(context), Repository.getInstance(context))
 
     fun provideArtistViewModelFactory(context: Context, artist: String) =
         ArtistViewModel.Factory(ServiceConnection.getInstance(context), Repository.getInstance(context), artist)

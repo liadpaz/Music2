@@ -6,23 +6,24 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.liadpaz.music.R
 import com.liadpaz.music.databinding.FragmentPlaylistBinding
 import com.liadpaz.music.ui.adapters.SongsAdapter
+import com.liadpaz.music.ui.viewmodels.PlayingViewModel
 import com.liadpaz.music.ui.viewmodels.PlaylistViewModel
 import com.liadpaz.music.utils.InjectorUtils
 
 class PlaylistFragment : Fragment() {
-
     private val navArgs by navArgs<PlaylistFragmentArgs>()
 
     private val viewModel by viewModels<PlaylistViewModel> {
         InjectorUtils.providePlaylistViewModelFactory(requireContext(), navArgs.playlist.mediaId!!)
     }
-    private val playingViewModel by viewModels<PlaylistViewModel> {
+    private val playingViewModel by activityViewModels<PlayingViewModel> {
         InjectorUtils.providePlayingViewModelFactory(requireActivity().application)
     }
     private lateinit var binding: FragmentPlaylistBinding

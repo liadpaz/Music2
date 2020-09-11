@@ -25,4 +25,4 @@ object C {
 }
 
 private fun equals(media1: MediaDescriptionCompat, media2: MediaDescriptionCompat): Boolean =
-    media1.title == media2.title && media1.description == media2.description && media1.subtitle == media2.subtitle && media1.mediaId == media2.mediaId
+    media1.title == media2.title && media1.description == media2.description && media1.subtitle == media2.subtitle && media1.mediaId == media2.mediaId && media1.extras == media2.extras

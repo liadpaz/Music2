@@ -8,22 +8,27 @@ import android.view.ViewGroup
 import android.widget.PopupMenu
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.liadpaz.music.R
 import com.liadpaz.music.databinding.FragmentSongsBinding
 import com.liadpaz.music.ui.adapters.SongsAdapter
+import com.liadpaz.music.ui.viewmodels.MainViewModel
 import com.liadpaz.music.ui.viewmodels.PlayingViewModel
 import com.liadpaz.music.ui.viewmodels.SongsViewModel
 import com.liadpaz.music.utils.InjectorUtils
 import com.liadpaz.music.utils.extensions.isNullOrZero
 
 class SongsFragment : Fragment() {
-
+    private val mainViewModel by activityViewModels<MainViewModel> {
+        InjectorUtils.provideMainViewModelFactory(requireContext())
+    }
     private val viewModel by viewModels<SongsViewModel> {
         InjectorUtils.provideSongsViewModelFactory(requireContext())
     }
-    private val playingViewModel by viewModels<PlayingViewModel> {
+    private val playingViewModel by activityViewModels<PlayingViewModel> {
         InjectorUtils.providePlayingViewModelFactory(requireActivity().application)
     }
     private lateinit var binding: FragmentSongsBinding
@@ -33,7 +38,7 @@ class SongsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.lifecycleOwner = viewLifecycleOwner
-        binding.viewModel = viewModel
+        binding.viewModel = mainViewModel
 
         binding.rvSongs.adapter = SongsAdapter(viewModel::play, { anchor, mediaItem ->
             PopupMenu(requireContext(), anchor, Gravity.NO_GRAVITY, android.R.attr.contextPopupMenuStyle, android.R.attr.contextPopupMenuStyle).apply {
@@ -46,9 +51,9 @@ class SongsFragment : Fragment() {
                     when (menuItem.itemId) {
                         R.id.menu_play_next -> playingViewModel.addNextQueueItem(mediaItem.description)
                         R.id.menu_add_to_queue -> playingViewModel.addQueueItem(mediaItem.description)
-                        R.id.menu_go_to_album -> TODO("implement")
-                        R.id.menu_go_to_artist -> TODO("implement")
-                        R.id.menu_add_to_playlist -> TODO("implement")
+                        R.id.menu_go_to_album -> findNavController().navigate(MainFragmentDirections.actionMainFragmentToAlbumFragment(mediaItem.description.description.toString()))
+                        R.id.menu_go_to_artist -> findNavController().navigate(MainFragmentDirections.actionMainFragmentToGoToArtistDialog(mediaItem))
+                        R.id.menu_add_to_playlist -> findNavController().navigate(MainFragmentDirections.actionMainFragmentToAddPlaylistDialog(intArrayOf(mediaItem.mediaId!!.toInt())))
                     }
                     true
                 }

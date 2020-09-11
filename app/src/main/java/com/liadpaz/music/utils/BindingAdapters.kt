@@ -28,9 +28,8 @@ fun setSongs(recyclerView: RecyclerView, songs: List<MediaBrowserCompat.MediaIte
     (recyclerView.adapter as? SongsAdapter)?.submitList(songs)
 
 @BindingAdapter("playlists")
-fun setPlaylists(recyclerView: RecyclerView, playlists: List<MediaBrowserCompat.MediaItem>?) {
+fun setPlaylists(recyclerView: RecyclerView, playlists: List<MediaBrowserCompat.MediaItem>?) =
     (recyclerView.adapter as? PlaylistsAdapter)?.submitList(playlists)
-}
 
 @BindingAdapter("albums")
 fun setAlbums(recyclerView: RecyclerView, albums: List<MediaBrowserCompat.MediaItem>?) = (recyclerView.adapter as? AlbumsAdapter)?.submitList(albums)
@@ -43,11 +42,10 @@ fun setArtists(recyclerView: RecyclerView, artists: List<MediaBrowserCompat.Medi
 fun setUri(imageView: ImageView, uri: Uri?) = GlideApp.with(imageView).load(uri).into(imageView)
 
 @BindingAdapter("playlistUri")
-fun setPlaylistUri(imageView: ImageView, bundle: Bundle?) {
+fun setPlaylistUri(imageView: ImageView, bundle: Bundle?) =
     bundle?.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI).takeUnless { s -> s.isNullOrEmpty() }?.let { uri ->
         GlideApp.with(imageView).load(Uri.parse(uri)).into(imageView)
     }
-}
 
 @BindingAdapter("playPause")
 fun setPlayPause(imageButton: ImageButton, playbackState: PlaybackStateCompat?) =
@@ -82,8 +80,8 @@ fun setProgress(seekBar: com.liadpaz.music.ui.utils.ProgressSeekBar, progress: N
     seekBar.progress = progress?.toInt() ?: 0
 }
 
-@BindingAdapter("colorFilter")
-fun setColorFilter(imageButton: ImageButton, @ColorInt color: Int?) =
+@BindingAdapter("buttonColorFilter")
+fun setButtonColorFilter(imageButton: ImageButton, @ColorInt color: Int?) =
     color?.let { imageButton.setColorFilter(color) }
 
 @BindingAdapter("gradientBackground")
@@ -109,5 +107,13 @@ fun setArtistSongs(textView: TextView, artist: MediaBrowserCompat.MediaItem) {
 fun setPlaylistSongs(textView: TextView, bundle: Bundle?) {
     textView.text = textView.context.getString(R.string.item_artist_songs, bundle?.getInt(EXTRA_SONGS_NUM))
 }
+
+@BindingAdapter("smallPlaylists")
+fun setSmallPlaylists(recyclerView: RecyclerView, playlists: List<MediaBrowserCompat.MediaItem>?) =
+    (recyclerView.adapter as? SmallPlaylistsAdapter)?.setList(playlists?.map { it.description.title.toString() }?.subList(1, playlists.size))
+
+@BindingAdapter("smallArtists")
+fun setSmallArtists(recyclerView: RecyclerView, artists: List<String>?) =
+    (recyclerView.adapter as? SmallArtistsAdapter)?.setList(artists)
 
 private const val TAG = "BindingAdapters"
