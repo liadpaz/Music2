@@ -37,4 +37,6 @@
     <string name="menu_search">חיפוש</string>
     <string name="dialog_new_playlist">פלייליסט חדש</string>
     <string name="dialog_select_artist">בחר אומן</string>
+    <string name="menu_remove_from_playlist">הסר מהפלייליסט</string>
+    <string name="item_no_songs">לא נמצאו שירים בתיקיה\\פלייליסט הנוכחית. ניתן להחליף תיקייה בפינה השמאלית למעלה של המסך.</string>
 </resources>

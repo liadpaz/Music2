@@ -18,13 +18,13 @@ import com.google.android.exoplayer2.extractor.mp4.Mp4Extractor
 import com.google.android.exoplayer2.extractor.wav.WavExtractor
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.MediaSource
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.upstream.DataSource
 import com.liadpaz.music.service.utils.BrowseTree
 import com.liadpaz.music.service.utils.PLAYLISTS_ROOT
 import com.liadpaz.music.service.utils.findValueByKey
 import com.liadpaz.music.utils.extensions.*
 
-class PlaybackPreparer(private val browseTree: BrowseTree, private val exoPlayer: SimpleExoPlayer, private val dataSourceFactory: DefaultDataSourceFactory) : MediaSessionConnector.PlaybackPreparer {
+class PlaybackPreparer(private val browseTree: BrowseTree, private val exoPlayer: SimpleExoPlayer, private val dataSourceFactory: DataSource.Factory) : MediaSessionConnector.PlaybackPreparer {
 
     private var mediaSource = ConcatenatingMediaSource()
     private val extractorsFactory = MediaExtractorsFactory()

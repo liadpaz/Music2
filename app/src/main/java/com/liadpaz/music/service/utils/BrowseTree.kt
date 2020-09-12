@@ -5,9 +5,9 @@ import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import androidx.lifecycle.Observer
-import com.liadpaz.music.data.findArtists
-import com.liadpaz.music.data.firstFirstArtist
 import com.liadpaz.music.service.PLAYLIST_RECENTLY_ADDED
+import com.liadpaz.music.utils.contentprovider.findArtists
+import com.liadpaz.music.utils.contentprovider.findFirstArtist
 import com.liadpaz.music.utils.extensions.*
 
 class BrowseTree(private val musicSource: FileMusicSource, private val onUpdate: (String) -> Unit) : Iterable<MediaMetadataCompat> {
@@ -50,7 +50,7 @@ class BrowseTree(private val musicSource: FileMusicSource, private val onUpdate:
                 list.forEach { mediaItem ->
                     songs.add(mediaItem)
 
-                    val album = _albums.findValueByKey { it.album == mediaItem.album } ?: buildAlbumRoot(mediaItem)
+                    val album = _albums.findValueByKey { it.album == mediaItem.displayDescription } ?: buildAlbumRoot(mediaItem)
                     album += mediaItem
 
                     mediaItem.findArtists().forEach { artist ->
@@ -69,15 +69,10 @@ class BrowseTree(private val musicSource: FileMusicSource, private val onUpdate:
             }
             change.recentlyAdded?.let { list ->
                 _recentlyAdded.clear()
-                list.forEach { mediaItem ->
-
-                    _recentlyAdded.add(mediaItem)
-                }
-                recentlyAddedMetadata.apply {
-                    description?.extras?.let { extras ->
-                        extras.putInt(EXTRA_SONGS_NUM, list.size)
-                        extras.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, list.getOrNull(0)?.displayIconUri.toString())
-                    }
+                _recentlyAdded.addAll(list)
+                recentlyAddedMetadata.description?.extras?.let { extras ->
+                    extras.putInt(EXTRA_SONGS_NUM, list.size)
+                    extras.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, list.getOrNull(0)?.displayIconUri.toString())
                 }
                 onUpdate(PLAYLISTS_ROOT)
                 onUpdate("${PLAYLISTS_ROOT}${PLAYLIST_RECENTLY_ADDED}")
@@ -156,11 +151,11 @@ class BrowseTree(private val musicSource: FileMusicSource, private val onUpdate:
 
     private fun buildAlbumRoot(mediaItem: MediaMetadataCompat): MutableList<MediaMetadataCompat> {
         val albumMetadata = MediaMetadataCompat.Builder().apply {
-            id = "${ALBUMS_ROOT}${mediaItem.album.toString()}"
-            title = mediaItem.album
-            artist = mediaItem.firstFirstArtist()
-            album = mediaItem.album
-            albumArtUri = mediaItem.albumArtUri.toString()
+            id = "${ALBUMS_ROOT}${mediaItem.displayDescription.toString()}"
+            title = mediaItem.displayDescription
+            artist = mediaItem.findFirstArtist()
+            album = mediaItem.displayDescription
+            albumArtUri = mediaItem.displayIconUri.toString()
             flag = MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
             downloadStatus = MediaDescriptionCompat.STATUS_DOWNLOADED
         }.build()

@@ -17,11 +17,8 @@ class ArtistsAdapter(private val onItemClick: (MediaBrowserCompat.MediaItem) -> 
         holder.bind(getItem(position))
 
     class ArtistViewHolder(private val binding: ItemArtistBinding, onItemClick: (MediaBrowserCompat.MediaItem) -> Unit) : RecyclerView.ViewHolder(binding.root) {
-
         init {
-            binding.root.setOnClickListener {
-                binding.artist?.let(onItemClick)
-            }
+            binding.root.setOnClickListener { onItemClick(binding.artist!!) }
         }
 
         fun bind(artist: MediaBrowserCompat.MediaItem) = with(binding) {

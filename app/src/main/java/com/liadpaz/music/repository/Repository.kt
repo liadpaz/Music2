@@ -67,9 +67,34 @@ class Repository private constructor(context: Context) {
         _playlists.postValue(playlists)
     }
 
+    fun moveSongInPlaylist(name: String, fromPosition: Int, toPosition: Int) {
+        val playlists = _playlists.value!!
+        val playlist = playlists.removeAt(playlists.indexOfFirst { it.first == name }).apply {
+            second.add(toPosition, second.removeAt(fromPosition))
+        }
+        playlists.add(0, playlist)
+        _playlists.postValue(playlists)
+    }
+
+    fun deletePlaylistSong(name: String, position: Int) {
+        val playlists = _playlists.value!!
+        val playlist = playlists.removeAt(playlists.indexOfFirst { it.first == name }).apply {
+            second.removeAt(position)
+        }
+        playlists.add(0, playlist)
+        _playlists.postValue(playlists)
+    }
+
     fun deletePlaylist(name: String) {
         val playlists = _playlists.value!!
         playlists.removeIf { (mName, _) -> mName == name }
+        _playlists.postValue(playlists)
+    }
+
+    fun changePlaylistName(oldName: String, newName: String) {
+        val playlists = _playlists.value!!
+        val playlist = Pair(newName, playlists.removeAt(playlists.indexOfFirst { (mName, _) -> mName == oldName }).second)
+        playlists.add(0, playlist)
         _playlists.postValue(playlists)
     }
 

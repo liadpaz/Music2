@@ -51,7 +51,7 @@ class ArtistFragment : Fragment() {
                         R.id.menu_play_next -> playingViewModel.addNextQueueItem(mediaItem.description)
                         R.id.menu_add_to_queue -> playingViewModel.addQueueItem(mediaItem.description)
                         R.id.menu_go_to_album -> findNavController().navigate(ArtistFragmentDirections.actionArtistFragmentToAlbumFragment(mediaItem.description.description.toString()))
-                        R.id.menu_add_to_playlist -> findNavController().navigate(MainFragmentDirections.actionMainFragmentToAddPlaylistDialog(intArrayOf(mediaItem.mediaId!!.toInt())))
+                        R.id.menu_add_to_playlist -> findNavController().navigate(ArtistFragmentDirections.actionArtistFragmentToAddPlaylistDialog(intArrayOf(mediaItem.mediaId!!.toInt())))
                     }
                     true
                 }

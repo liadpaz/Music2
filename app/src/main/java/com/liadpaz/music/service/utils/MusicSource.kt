@@ -3,14 +3,11 @@ package com.liadpaz.music.service.utils
 import android.content.Context
 import android.os.Bundle
 import android.provider.MediaStore
-import android.support.v4.media.MediaBrowserCompat
-import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
-import com.liadpaz.music.data.Song
 import com.liadpaz.music.repository.Repository
 import com.liadpaz.music.utils.contentprovider.ORDER_LAST_ADDED
 import com.liadpaz.music.utils.contentprovider.SongProvider
@@ -37,18 +34,18 @@ class FileMusicSource(context: Context, private val repository: Repository) : Li
 
     private var songs: List<MediaMetadataCompat>? = null
     private var recentlyAdded: List<MediaMetadataCompat>? = null
-    private var allSongs: List<Song>? = null
+    private var allSongs: List<MediaMetadataCompat>? = null
     private var playlistsIds: MutableList<Pair<String, MutableList<Int>>>? = null
 
-    private val allSongsObserver = Observer { songs: ArrayList<Song>? ->
-        this.songs = songs?.map { item -> MediaMetadataCompat.Builder().from(item).build() }
+    private val allSongsObserver = Observer { songs: ArrayList<MediaMetadataCompat>? ->
+        this.songs = songs
         postValue(SourceChange(allSongs = this.songs, recentlyAdded = recentlyAdded, playlists = createPlaylists(playlistsIds)))
     }
-    private val recentlyAddedObserver = Observer { songs: ArrayList<Song>? ->
-        recentlyAdded = songs?.map { item -> MediaMetadataCompat.Builder().from(item).build() }
+    private val recentlyAddedObserver = Observer { songs: ArrayList<MediaMetadataCompat>? ->
+        recentlyAdded = songs
         postValue(SourceChange(allSongs = this.songs, recentlyAdded = recentlyAdded, playlists = createPlaylists(playlistsIds)))
     }
-    private val playlistsObserver = Observer { songs: ArrayList<Song>? ->
+    private val playlistsObserver = Observer { songs: ArrayList<MediaMetadataCompat>? ->
         allSongs = songs
         postValue(SourceChange(allSongs = this.songs, recentlyAdded = recentlyAdded, playlists = createPlaylists(playlistsIds)))
     }
@@ -68,7 +65,7 @@ class FileMusicSource(context: Context, private val repository: Repository) : Li
         allSongs?.let { all ->
             playlists?.map { (name, songsIds) ->
                 name to songsIds.map { id ->
-                    MediaMetadataCompat.Builder().from(all.find { it.mediaId.toInt() == id }!!).build()
+                    all.find { it.id == id.toString() }!!
                 }
             }
         }
@@ -161,28 +158,6 @@ class FileMusicSource(context: Context, private val repository: Repository) : Li
     override fun iterator(): Iterator<MediaMetadataCompat> = songs?.iterator() ?: emptyList<MediaMetadataCompat>().iterator()
 
     data class SourceChange(val allSongs: List<MediaMetadataCompat>? = null, val recentlyAdded: List<MediaMetadataCompat>? = null, val playlists: List<Pair<String, List<MediaMetadataCompat>>>? = null)
-}
-
-fun MediaMetadataCompat.Builder.from(song: Song): MediaMetadataCompat.Builder {
-    id = song.mediaId.toString()
-    title = song.title
-    artist = song.artist
-    album = song.album
-    if (song.duration != -1) {
-        duration = song.duration.toLong()
-    }
-    mediaUri = song.mediaUri.toString()
-    albumArtUri = song.artUri.toString()
-    flag = MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
-
-    displayTitle = song.title
-    displaySubtitle = song.artist
-    displayDescription = song.album
-    displayIconUri = song.artUri.toString()
-
-    downloadStatus = MediaDescriptionCompat.STATUS_DOWNLOADED
-
-    return this
 }
 
 private const val TAG = "MusicSource"

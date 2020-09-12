@@ -8,8 +8,8 @@ import android.media.AudioManager
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
 import android.view.View
+import android.view.WindowManager
 import android.widget.SeekBar
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -145,7 +145,6 @@ class MainActivity : AppCompatActivity() {
             isQueueChanging = false
         }
         playingViewModel.queuePosition.observe(this) {
-            Log.d(TAG, "onCreate: $it")
             if (!isQueueChanging) {
                 binding.viewPager.setCurrentItem(it, smoothScroll)
                 smoothScroll = true
@@ -156,6 +155,9 @@ class MainActivity : AppCompatActivity() {
 
         binding.ibDown.setOnClickListener {
             bottomSheetState = BottomSheetBehavior.STATE_COLLAPSED
+        }
+        binding.ibMore.setOnClickListener {
+            // TODO: set on more menu
         }
 
         binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
@@ -186,6 +188,7 @@ class MainActivity : AppCompatActivity() {
             when (playback.state) {
                 PlaybackStateCompat.STATE_NONE,
                 PlaybackStateCompat.STATE_STOPPED,
+                PlaybackStateCompat.STATE_ERROR,
                 -> {
                     bottomSheetState = BottomSheetBehavior.STATE_HIDDEN
                 }
@@ -205,9 +208,13 @@ class MainActivity : AppCompatActivity() {
                             binding.bottomSheet.setOnClickListener {
                                 bottomSheetState = BottomSheetBehavior.STATE_EXPANDED
                             }
+                            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                            setButtonsState(View.INVISIBLE)
                         }
                         BottomSheetBehavior.STATE_EXPANDED -> {
                             binding.bottomSheet.setOnClickListener { }
+                            // TODO: check if screen should stay on
+                            setButtonsState(View.VISIBLE)
                         }
                         BottomSheetBehavior.STATE_HIDDEN -> {
                             playingViewModel.stop()
@@ -226,17 +233,15 @@ class MainActivity : AppCompatActivity() {
 
         binding.bottomSheet.addTransitionListener(object : TransitionAdapter() {
             override fun onTransitionCompleted(motionLayout: MotionLayout, currentId: Int) {
-                when (currentId) {
-                    R.id.expanded -> {
-                        motionLayout.setTransition(R.id.transition_bottomsheet)
-                        binding.bottomSheet.isNestedScrollingEnabled = false
-                    }
-                    R.id.queue_shown -> binding.bottomSheet.isNestedScrollingEnabled = true
+                if (currentId == R.id.expanded) {
+                    motionLayout.setTransition(R.id.transition_bottomsheet)
+                    binding.bottomSheet.isNestedScrollingEnabled = false
                 }
             }
 
             override fun onTransitionStarted(motionLayout: MotionLayout, startId: Int, endId: Int) {
                 if (motionLayout.progress < 100F && startId == R.id.expanded && endId == R.id.queue_shown) {
+                    binding.bottomSheet.isNestedScrollingEnabled = true
                     binding.rvQueue.stopScroll()
                     (binding.rvQueue.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(playingViewModel.queuePosition.value!!, 0)
                 }
@@ -255,8 +260,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onSupportNavigateUp(): Boolean =
-        findNavController(R.id.nav_host_fragment).navigateUp()
+    override fun onSupportNavigateUp(): Boolean = findNavController(R.id.nav_host_fragment).navigateUp()
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
@@ -287,6 +291,12 @@ class MainActivity : AppCompatActivity() {
         set(value) {
             bottomSheet.state = value
         }
+
+    private fun setButtonsState(state: Int) {
+        binding.ibDown.visibility = state
+        binding.ibToggleQueue.visibility = state
+        binding.ibMore.visibility = state
+    }
 
     private fun handleIntent(intent: Intent?) {
         if (intent?.extras?.getString(EXTRA_TYPE) == MusicService::class.java.canonicalName) {

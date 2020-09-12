@@ -16,7 +16,6 @@ class MainViewModel(private val serviceConnection: ServiceConnection, private va
 
     private val subscriptionCallback = object : MediaBrowserCompat.SubscriptionCallback() {
         override fun onChildrenLoaded(parentId: String, children: MutableList<MediaBrowserCompat.MediaItem>) {
-//            Log.d(TAG, "onChildrenLoaded: $parentId")
             when (parentId) {
                 ALL_SONGS_ROOT -> _songs.postValue(children)
                 PLAYLISTS_ROOT -> _playlists.postValue(children)
@@ -60,5 +59,3 @@ class MainViewModel(private val serviceConnection: ServiceConnection, private va
             MainViewModel(serviceConnection, repository) as T
     }
 }
-
-private const val TAG = "MainViewModel"

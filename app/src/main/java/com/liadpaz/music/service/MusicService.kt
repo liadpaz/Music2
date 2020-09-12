@@ -12,7 +12,6 @@ import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.lifecycle.Observer
 import androidx.media.MediaBrowserServiceCompat
@@ -28,10 +27,9 @@ import com.google.android.exoplayer2.mediacodec.MediaCodecSelector
 import com.google.android.exoplayer2.metadata.MetadataOutput
 import com.google.android.exoplayer2.text.TextOutput
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.util.Util
+import com.google.android.exoplayer2.upstream.ContentDataSource
+import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.video.VideoRendererEventListener
-import com.liadpaz.music.R
 import com.liadpaz.music.repository.Repository
 import com.liadpaz.music.service.utils.BrowseTree
 import com.liadpaz.music.service.utils.FileMusicSource
@@ -109,8 +107,7 @@ class MusicService : MediaBrowserServiceCompat() {
             NotificationManager(applicationContext, exoPlayer, mediaSession.sessionToken, PlayerNotificationListener())
 
         mediaSessionConnector = MediaSessionConnector(mediaSession).also { connector ->
-            val dataSourceFactory =
-                DefaultDataSourceFactory(this, Util.getUserAgent(this, getString(R.string.app_name)))
+            val dataSourceFactory = DataSource.Factory { ContentDataSource(this) }
 
             val playbackPreparer = PlaybackPreparer(browseTree, exoPlayer, dataSourceFactory)
             connector.setPlayer(exoPlayer)
@@ -158,15 +155,16 @@ class MusicService : MediaBrowserServiceCompat() {
 
         override fun onNotificationPosted(notificationId: Int, notification: Notification, ongoing: Boolean) {
             if (ongoing && !isForegroundService) {
-                ContextCompat.startForegroundService(applicationContext, Intent(applicationContext, this@MusicService.javaClass))
-
+                startForegroundService(Intent(applicationContext, this@MusicService.javaClass))
                 startForeground(notificationId, notification)
+                Log.d(TAG, "Foreground: true")
                 isForegroundService = true
             }
         }
 
         override fun onNotificationCancelled(notificationId: Int, dismissedByUser: Boolean) {
             stopForeground(true)
+            Log.d(TAG, "Foreground: false, notification: off")
             isForegroundService = false
             stopSelf()
         }
@@ -181,7 +179,10 @@ class MusicService : MediaBrowserServiceCompat() {
                     notificationManager.showNotification()
 
                     if (playbackState == Player.STATE_READY) {
-                        if (!playWhenReady) stopForeground(false)
+                        if (!playWhenReady) {
+                            stopForeground(false)
+                            Log.d(TAG, "Foreground: false, notification: on")
+                        }
                     }
                 }
                 else -> {

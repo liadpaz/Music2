@@ -8,16 +8,19 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import android.support.v4.media.MediaDescriptionCompat
+import android.support.v4.media.MediaMetadataCompat
 import androidx.annotation.StringDef
+import androidx.core.database.getIntOrNull
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
-import com.liadpaz.music.data.Song
+import com.liadpaz.music.utils.extensions.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class SongProvider(private val context: Context, @Order var sortOrder: String = ORDER_DEFAULT, val folderLiveData: LiveData<String>? = null) : LiveData<ArrayList<Song>?>() {
+class SongProvider(private val context: Context, @Order var sortOrder: String = ORDER_DEFAULT, val folderLiveData: LiveData<String>? = null) : LiveData<ArrayList<MediaMetadataCompat>?>() {
 
     private var privateFolder = ""
 
@@ -53,9 +56,9 @@ class SongProvider(private val context: Context, @Order var sortOrder: String = 
         folderLiveData?.removeObserver(folderObserver)
     }
 
-    private suspend fun getContentProviderValue(): ArrayList<Song>? = withContext(Dispatchers.IO) {
+    private suspend fun getContentProviderValue(): ArrayList<MediaMetadataCompat>? = withContext(Dispatchers.IO) {
         context.contentResolver.query(mediaStoreUri, PROJECTION, "_data like ?", arrayOf("%$privateFolder%"), sortOrder)?.use { cursor ->
-            val songs = arrayListOf<Song>()
+            val songs = arrayListOf<MediaMetadataCompat>()
             if (cursor.moveToFirst()) {
                 val idIndex = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
                 val titleIndex = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
@@ -66,16 +69,14 @@ class SongProvider(private val context: Context, @Order var sortOrder: String = 
                 do {
                     val mediaId = cursor.getInt(idIndex).toLong()
                     songs.add(
-                        Song(
+                        MediaMetadataCompat.Builder().create(
                             mediaId,
                             ContentUris.withAppendedId(mediaStoreUri, mediaId),
                             cursor.getString(titleIndex),
                             cursor.getString(artistIndex),
                             cursor.getString(albumIndex),
                             Uri.parse("content://media/external/audio/albumart/${cursor.getInt(albumIdIndex)}"),
-                            if (durationIndex != -1) {
-                                cursor.getInt(durationIndex)
-                            } else -1
+                            cursor.getIntOrNull(durationIndex)
                         )
                     )
                 } while (cursor.moveToNext())
@@ -95,10 +96,29 @@ class SongProvider(private val context: Context, @Order var sortOrder: String = 
     }
 }
 
+private fun MediaMetadataCompat.Builder.create(mediaId: Long, mediaUri: Uri, title: String, artist: String, album: String, artUri: Uri, duration: Int?): MediaMetadataCompat {
+    this.id = mediaId.toString()
+    this.mediaUri = mediaUri.toString()
+    this.displayTitle = title
+    this.displaySubtitle = artist
+    this.displayDescription = album
+    this.displayIconUri = artUri.toString()
+    duration?.let { this.duration = it.toLong() }
+    this.downloadStatus = MediaDescriptionCompat.STATUS_DOWNLOADED
+    return build()
+}
+
 const val ORDER_DEFAULT = "${MediaStore.Audio.Media.TITLE} COLLATE NOCASE ASC"
 const val ORDER_LAST_ADDED = "${MediaStore.Audio.Media.DATE_MODIFIED} DESC"
 
 @StringDef(value = [ORDER_DEFAULT, ORDER_LAST_ADDED])
 annotation class Order
 
-private const val TAG = "ContentProviderLiveData"
+fun MediaMetadataCompat.findArtists() =
+    artistsRegex.findAll(displaySubtitle.toString()).toList().map(MatchResult::value)
+
+fun MediaMetadataCompat.findFirstArtist() = findArtists()[0]
+
+fun MediaDescriptionCompat.findArtists(): List<String> = artistsRegex.findAll(subtitle.toString()).toList().map(MatchResult::value)
+
+private val artistsRegex = Regex("([^ &,]([^,&])*[^ ,&]+)")

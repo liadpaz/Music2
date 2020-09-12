@@ -27,6 +27,10 @@ import com.liadpaz.music.utils.extensions.findDarkColor
 fun setSongs(recyclerView: RecyclerView, songs: List<MediaBrowserCompat.MediaItem>?) =
     (recyclerView.adapter as? SongsAdapter)?.submitList(songs)
 
+@BindingAdapter("playlistSongs")
+fun setPlaylistSongs(recyclerView: RecyclerView, songs: List<MediaBrowserCompat.MediaItem>?) =
+    (recyclerView.adapter as? PlaylistAdapter)?.submitList(songs)
+
 @BindingAdapter("playlists")
 fun setPlaylists(recyclerView: RecyclerView, playlists: List<MediaBrowserCompat.MediaItem>?) =
     (recyclerView.adapter as? PlaylistsAdapter)?.submitList(playlists)

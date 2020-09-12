@@ -8,6 +8,7 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.navArgs
+import com.liadpaz.music.R
 import com.liadpaz.music.databinding.DialogCreatePlaylistBinding
 import com.liadpaz.music.ui.viewmodels.PlaylistsViewModel
 import com.liadpaz.music.utils.InjectorUtils
@@ -30,7 +31,7 @@ class CreatePlaylistDialog : DialogFragment() {
             dismiss()
         }
         binding.etPlaylistName.addTextChangedListener {
-            binding.btnApply.isEnabled = !it.isNullOrEmpty() && it.toString() !in viewModel.playlists
+            binding.btnApply.isEnabled = !it.isNullOrEmpty() && it.toString() != getString(R.string.playlist_recently_added) && it.toString() !in viewModel.playlists
         }
     }
 }

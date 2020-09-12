@@ -9,7 +9,6 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.liadpaz.music.databinding.DialogAddPlaylistBinding
 import com.liadpaz.music.ui.adapters.SmallPlaylistsAdapter
@@ -39,7 +38,6 @@ class AddPlaylistDialog : DialogFragment() {
             dismiss()
         }
         binding.rvPlaylists.addItemDecoration(DividerItemDecoration(requireContext(), RecyclerView.VERTICAL))
-        (binding.rvPlaylists.layoutManager as LinearLayoutManager)
         binding.btnCancel.setOnClickListener { dismiss() }
         binding.btnNewPlaylist.setOnClickListener {
             findNavController().navigate(AddPlaylistDialogDirections.actionAddPlaylistDialogToCreatePlaylistDialog(args.songs))

@@ -5,7 +5,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.view.MotionEvent
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.liadpaz.music.databinding.ItemQueueBinding
+import com.liadpaz.music.databinding.ItemQueueSongBinding
 import com.liadpaz.music.utils.extensions.layoutInflater
 
 class QueueAdapter(private val onItemClick: (Int) -> Unit, private val onDragClick: (SongViewHolder) -> Unit) : RecyclerView.Adapter<QueueAdapter.SongViewHolder>() {
@@ -47,28 +47,25 @@ class QueueAdapter(private val onItemClick: (Int) -> Unit, private val onDragCli
     override fun getItemCount(): Int = currentQueue?.size ?: 0
 
     @SuppressLint("ClickableViewAccessibility")
-    class SongViewHolder private constructor(private val binding: ItemQueueBinding, onItemClick: (Int) -> Unit, onDragClick: (SongViewHolder) -> Unit) : RecyclerView.ViewHolder(binding.root) {
-
+    class SongViewHolder private constructor(private val binding: ItemQueueSongBinding, onItemClick: (Int) -> Unit, onDragClick: (SongViewHolder) -> Unit) : RecyclerView.ViewHolder(binding.root) {
         init {
             binding.root.setOnClickListener { onItemClick(adapterPosition) }
             binding.ibDrag.setOnTouchListener { _, motionEvent ->
-                if (motionEvent.actionMasked == MotionEvent.ACTION_DOWN) {
+                if (motionEvent.action == MotionEvent.ACTION_DOWN) {
                     onDragClick(this)
                 }
                 true
             }
         }
 
-        fun bind(item: MediaSessionCompat.QueueItem?) {
-            binding.item = item
+        fun bind(song: MediaSessionCompat.QueueItem?) {
+            binding.song = song
             binding.executePendingBindings()
         }
 
         companion object {
             fun create(viewGroup: ViewGroup, onClick: (Int) -> Unit, onDragClick: (SongViewHolder) -> Unit): SongViewHolder =
-                SongViewHolder(ItemQueueBinding.inflate(viewGroup.layoutInflater, viewGroup, false), onClick, onDragClick)
+                SongViewHolder(ItemQueueSongBinding.inflate(viewGroup.layoutInflater, viewGroup, false), onClick, onDragClick)
         }
     }
 }
-
-private const val TAG = "QueueAdapter"

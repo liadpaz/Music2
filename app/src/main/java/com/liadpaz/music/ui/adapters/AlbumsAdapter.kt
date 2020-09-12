@@ -10,20 +10,15 @@ import com.liadpaz.music.utils.extensions.layoutInflater
 
 class AlbumsAdapter(private val onItemClick: (MediaBrowserCompat.MediaItem) -> Unit) : ListAdapter<MediaBrowserCompat.MediaItem, AlbumsAdapter.AlbumViewHolder>(C.diffCallback) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AlbumViewHolder =
-        AlbumViewHolder.create(parent, onItemClick)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AlbumViewHolder = AlbumViewHolder.create(parent, onItemClick)
 
-    override fun onBindViewHolder(holder: AlbumViewHolder, position: Int) =
-        holder.bind(getItem(position))
+    override fun onBindViewHolder(holder: AlbumViewHolder, position: Int) = holder.bind(getItem(position))
 
-    override fun submitList(list: List<MediaBrowserCompat.MediaItem>?) =
-        super.submitList(list?.let { ArrayList(list) })
+    override fun submitList(list: List<MediaBrowserCompat.MediaItem>?) = super.submitList(list?.let { ArrayList(list) })
 
     class AlbumViewHolder private constructor(private val binding: ItemAlbumBinding, onItemClick: (MediaBrowserCompat.MediaItem) -> Unit) : RecyclerView.ViewHolder(binding.root) {
         init {
-            binding.root.setOnClickListener {
-                binding.album?.let(onItemClick)
-            }
+            binding.root.setOnClickListener { onItemClick(binding.album!!) }
         }
 
         fun bind(album: MediaBrowserCompat.MediaItem) = with(binding) {

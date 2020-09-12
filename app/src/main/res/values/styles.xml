@@ -1,25 +1,11 @@
 <resources>
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
-    </style>
-
-    <style name="AppTheme.Blue" parent="AppTheme">
-        <item name="colorPrimary">@color/colorPrimaryBlue</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDarkBlue</item>
-        <item name="colorAccent">@color/colorAccentBlue</item>
-    </style>
-
-    <style name="AppTheme.Green" parent="AppTheme">
-        <item name="colorPrimary">@color/colorPrimaryGreen</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDarkGreen</item>
-        <item name="colorAccent">@color/colorAccentGreen</item>
-    </style>
-
-    <style name="AppTheme.Red" parent="AppTheme">
-        <item name="colorPrimary">@color/colorPrimaryRed</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDarkRed</item>
-        <item name="colorAccent">@color/colorAccentRed</item>
     </style>
 </resources>

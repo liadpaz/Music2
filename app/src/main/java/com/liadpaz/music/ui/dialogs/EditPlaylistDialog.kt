@@ -4,10 +4,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.navArgs
+import com.liadpaz.music.R
 import com.liadpaz.music.databinding.DialogEditPlaylistBinding
+import com.liadpaz.music.service.utils.PLAYLISTS_ROOT
 import com.liadpaz.music.ui.viewmodels.PlaylistsViewModel
 import com.liadpaz.music.utils.InjectorUtils
 
@@ -26,7 +29,11 @@ class EditPlaylistDialog : DialogFragment() {
         binding.etPlaylistName.setText(args.playlist.description.title.toString())
         binding.btnCancel.setOnClickListener { dismiss() }
         binding.btnApply.setOnClickListener {
-            // TODO: implement edit playlist
+            viewModel.changeName(args.playlist.mediaId!!.substring(PLAYLISTS_ROOT.length), binding.etPlaylistName.text.toString())
+            dismiss()
+        }
+        binding.etPlaylistName.addTextChangedListener {
+            binding.btnApply.isEnabled = !it.isNullOrEmpty() && it.toString() != getString(R.string.playlist_recently_added) && it.toString() !in viewModel.playlists
         }
         binding.btnDelete.setOnClickListener {
             viewModel.deletePlaylist(args.playlist.description.title.toString())

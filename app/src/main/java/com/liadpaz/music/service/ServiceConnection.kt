@@ -19,8 +19,6 @@ import com.liadpaz.music.service.MusicService.QueueEditor.Companion.ACTION_REMOV
 import com.liadpaz.music.service.MusicService.QueueEditor.Companion.EXTRA_FROM_POSITION
 import com.liadpaz.music.service.MusicService.QueueEditor.Companion.EXTRA_TO_POSITION
 import com.liadpaz.music.utils.extensions.id
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 
 class ServiceConnection private constructor(context: Context, serviceComponent: ComponentName) {
     val isConnected = MutableLiveData<Boolean>()
@@ -46,24 +44,20 @@ class ServiceConnection private constructor(context: Context, serviceComponent: 
         }
     private var mediaController: MediaControllerCompat? = null
 
-    fun subscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback) =
-        mediaBrowser.subscribe(parentId, callback)
+    fun subscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback) = mediaBrowser.subscribe(parentId, callback)
 
-    fun unsubscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback) =
-        mediaBrowser.unsubscribe(parentId, callback)
+    fun unsubscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback) = mediaBrowser.unsubscribe(parentId, callback)
 
     fun addQueueItem(item: MediaDescriptionCompat) = mediaController?.addQueueItem(item)
 
-    fun addQueueItem(item: MediaDescriptionCompat, position: Int) =
-        mediaController?.addQueueItem(item, position)
+    fun addQueueItem(item: MediaDescriptionCompat, position: Int) = mediaController?.addQueueItem(item, position)
 
-    fun removeQueueItemAt(position: Int) =
-        sendCommand(ACTION_REMOVE_ITEM, bundleOf(EXTRA_POSITION to position))
+    fun removeQueueItemAt(position: Int) = sendCommand(ACTION_REMOVE_ITEM, bundleOf(EXTRA_POSITION to position))
 
     fun moveQueueItem(fromPosition: Int, toPosition: Int) =
         sendCommand(ACTION_MOVE_ITEM, bundleOf(EXTRA_FROM_POSITION to fromPosition, EXTRA_TO_POSITION to toPosition))
 
-    fun sendCommand(command: String, parameters: Bundle?, resultCallback: ((Int, Bundle?) -> Unit) = { _, _ -> }) =
+    private fun sendCommand(command: String, parameters: Bundle?, resultCallback: ((Int, Bundle?) -> Unit) = { _, _ -> }) =
         if (mediaBrowser.isConnected) {
             mediaController?.sendCommand(command, parameters, object : ResultReceiver(Handler(Looper.getMainLooper())) {
                 override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
@@ -75,15 +69,7 @@ class ServiceConnection private constructor(context: Context, serviceComponent: 
             false
         }
 
-    suspend fun sendCommandAsync(command: String, parameters: Bundle?): Pair<Int, Bundle?> =
-        suspendCancellableCoroutine { cont ->
-            sendCommand(command, parameters) { resultCode, resultData ->
-                cont.resume(Pair(resultCode, resultData))
-            }
-        }
-
     private inner class MediaBrowserConnectionCallback(private val context: Context) : MediaBrowserCompat.ConnectionCallback() {
-
         override fun onConnected() {
             mediaController = MediaControllerCompat(context, mediaBrowser.sessionToken).apply {
                 registerCallback(MediaControllerCallback())

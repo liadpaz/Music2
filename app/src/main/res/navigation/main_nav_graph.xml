@@ -19,6 +19,9 @@
         <action
             android:id="@+id/action_albumFragment_to_goToArtistDialog"
             app:destination="@id/goToArtistDialog" />
+        <action
+            android:id="@+id/action_albumFragment_to_addPlaylistDialog"
+            app:destination="@id/addPlaylistDialog" />
     </fragment>
     <fragment
         android:id="@+id/artistFragment"
@@ -31,6 +34,9 @@
             android:id="@+id/action_artistFragment_to_albumFragment"
             app:destination="@id/albumFragment"
             app:popUpTo="@id/mainFragment" />
+        <action
+            android:id="@+id/action_artistFragment_to_addPlaylistDialog"
+            app:destination="@id/addPlaylistDialog" />
     </fragment>
     <fragment
         android:id="@+id/mainFragment"
@@ -71,9 +77,8 @@
             app:destination="@id/albumFragment"
             app:popUpTo="@id/mainFragment" />
         <action
-            android:id="@+id/action_playlistFragment_to_artistFragment"
-            app:destination="@id/artistFragment"
-            app:popUpTo="@id/mainFragment" />
+            android:id="@+id/action_playlistFragment_to_goToArtistDialog"
+            app:destination="@id/goToArtistDialog" />
     </fragment>
     <dialog
         android:id="@+id/createPlaylistDialog"

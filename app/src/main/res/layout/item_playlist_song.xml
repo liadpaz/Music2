@@ -5,8 +5,8 @@
     <data>
 
         <variable
-            name="item"
-            type="android.support.v4.media.session.MediaSessionCompat.QueueItem" />
+            name="song"
+            type="android.support.v4.media.MediaBrowserCompat.MediaItem" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -39,7 +39,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@id/ibDrag"
             app:layout_constraintTop_toTopOf="parent"
-            app:uri="@{item.description.iconUri}" />
+            app:uri="@{song.description.iconUri}" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline"
@@ -57,7 +57,7 @@
             android:layout_marginBottom="8dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="@{item.description.title}"
+            android:text="@{song.description.title}"
             app:layout_constraintBottom_toTopOf="@+id/guideline"
             app:layout_constraintEnd_toStartOf="@+id/ibMore"
             app:layout_constraintStart_toEndOf="@+id/ivSongCover" />
@@ -71,7 +71,7 @@
             android:layout_marginEnd="16dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="@{item.description.subtitle}"
+            android:text="@{song.description.subtitle}"
             app:layout_constraintEnd_toStartOf="@+id/ibMore"
             app:layout_constraintStart_toEndOf="@+id/ivSongCover"
             app:layout_constraintTop_toTopOf="@+id/guideline" />

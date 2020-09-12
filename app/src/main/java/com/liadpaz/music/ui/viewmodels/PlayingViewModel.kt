@@ -10,7 +10,6 @@ import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
 import androidx.lifecycle.*
 import androidx.palette.graphics.Palette
 import com.liadpaz.music.repository.Repository
@@ -61,7 +60,6 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
     }
 
     private val mediaMetadataObserver = Observer<MediaMetadataCompat> {
-        Log.d(TAG, "media metadata changed")
         updateState(it)
     }
 
@@ -79,13 +77,11 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
 
     fun addNextQueueItem(item: MediaDescriptionCompat) = serviceConnection.addQueueItem(item, queuePosition.value!! + 1)
 
-    fun moveQueueItem(fromPosition: Int, toPosition: Int) =
-        serviceConnection.moveQueueItem(fromPosition, toPosition)
+    fun moveQueueItem(fromPosition: Int, toPosition: Int) = serviceConnection.moveQueueItem(fromPosition, toPosition)
 
     fun removeQueueItem(position: Int) = serviceConnection.removeQueueItemAt(position)
 
-    fun skipToQueueItem(position: Int) =
-        serviceConnection.transportControls?.skipToQueueItem(position.toLong())
+    fun skipToQueueItem(position: Int) = serviceConnection.transportControls?.skipToQueueItem(position.toLong())
 
     fun toggleRepeatMode() =
         serviceConnection.transportControls?.setRepeatMode(if (serviceConnection.repeatMode.value == PlaybackStateCompat.REPEAT_MODE_ALL) PlaybackStateCompat.REPEAT_MODE_ONE else PlaybackStateCompat.REPEAT_MODE_ALL)
@@ -112,16 +108,16 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
     }
 
     private fun updateState(mediaMetadata: MediaMetadataCompat) {
-        if (mediaMetadata.duration > 0L && mediaMetadata.id != null) {
-            CoroutineScope(Dispatchers.IO).launch {
+        CoroutineScope(Dispatchers.IO).launch {
+            if (mediaMetadata.duration != -1L && mediaMetadata.id != null) {
                 _mediaMetadata.postValue(
                     NowPlayingMetadata(
                         mediaMetadata.id!!,
-                        mediaMetadata.albumArtUri,
-                        mediaMetadata.title?.trim(),
+                        mediaMetadata.displayIconUri,
+                        mediaMetadata.displayTitle?.trim(),
                         mediaMetadata.displaySubtitle?.trim(),
                         mediaMetadata.duration,
-                        Palette.from(getBitmap(GlideApp.with(getApplication() as Context), mediaMetadata.albumArtUri)).generate()
+                        Palette.from(getBitmap(GlideApp.with(getApplication() as Context), mediaMetadata.displayIconUri)).generate()
                     )
                 )
             }

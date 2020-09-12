@@ -37,4 +37,6 @@
     <string name="dialog_new_playlist">New Playlist</string>
     <string name="menu_search">Search</string>
     <string name="dialog_select_artist">Select Artist</string>
+    <string name="menu_remove_from_playlist">Remove from playlist</string>
+    <string name="item_no_songs">No songs has been found in this folder/playlist. You can change the folder from the settings in the top right corner of the screen.</string>
 </resources>

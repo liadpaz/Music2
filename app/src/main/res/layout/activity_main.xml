@@ -117,7 +117,8 @@
                         android:marqueeRepeatLimit="marquee_forever"
                         android:singleLine="true"
                         android:text="@{viewModel.mediaMetadata.title}"
-                        android:textSize="18sp" />
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tvSongArtistSmall"
@@ -165,8 +166,7 @@
                         android:marqueeRepeatLimit="marquee_forever"
                         android:singleLine="true"
                         android:text="@{viewModel.mediaMetadata.artist}"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
+                        android:textSize="18sp" />
                 </LinearLayout>
 
                 <androidx.constraintlayout.widget.Guideline

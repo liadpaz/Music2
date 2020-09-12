@@ -7,9 +7,9 @@ import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import com.liadpaz.music.data.findArtists
 import com.liadpaz.music.databinding.DialogGoToArtistBinding
 import com.liadpaz.music.ui.adapters.SmallArtistsAdapter
+import com.liadpaz.music.utils.contentprovider.findArtists
 
 class GoToArtistDialog : DialogFragment() {
     private val args by navArgs<GoToArtistDialogArgs>()

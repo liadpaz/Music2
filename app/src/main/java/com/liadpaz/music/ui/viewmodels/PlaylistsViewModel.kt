@@ -17,6 +17,8 @@ class PlaylistsViewModel(private val serviceConnection: ServiceConnection, priva
 
     fun addSongsToPlaylist(name: String, songs: IntArray? = null) = repository.addSongsToPlaylist(name, songs ?: intArrayOf())
 
+    fun changeName(oldName: String, newName: String) = repository.changePlaylistName(oldName, newName)
+
     class Factory(private val serviceConnection: ServiceConnection, private val repository: Repository) : ViewModelProvider.NewInstanceFactory() {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel?> create(modelClass: Class<T>): T =
