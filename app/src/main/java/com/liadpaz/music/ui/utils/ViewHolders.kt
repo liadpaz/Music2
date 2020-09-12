@@ -61,5 +61,3 @@ const val TYPE_SHUFFLE = 1
 const val TYPE_SONG = 2
 const val TYPE_MOVABLE_SONG = 3
 const val TYPE_NO_SONGS = 4
-
-// TODO: view holder class for no songs found and implement it

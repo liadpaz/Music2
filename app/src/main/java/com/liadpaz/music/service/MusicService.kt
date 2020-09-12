@@ -285,6 +285,8 @@ class MusicService : MediaBrowserServiceCompat() {
 
         override fun getMediaDescription(player: Player, windowIndex: Int): MediaDescriptionCompat =
             player.currentTimeline.getWindow(windowIndex, window).tag as MediaDescriptionCompat
+
+        // TODO: get bitmap asynchronously and notify when retrieved
     }
 
     /**
