@@ -9,6 +9,12 @@ import com.liadpaz.music.service.PLAYLIST_RECENTLY_ADDED
 import com.liadpaz.music.utils.contentprovider.findArtists
 import com.liadpaz.music.utils.contentprovider.findFirstArtist
 import com.liadpaz.music.utils.extensions.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.*
+import kotlin.collections.HashMap
 
 class BrowseTree(private val musicSource: FileMusicSource, private val onUpdate: (String) -> Unit) : Iterable<MediaMetadataCompat> {
 
@@ -16,24 +22,22 @@ class BrowseTree(private val musicSource: FileMusicSource, private val onUpdate:
         sortSongs(sourceChange)
     }
 
-    private val songs = mutableListOf<MediaMetadataCompat>()
-    private val _playlists = mutableMapOf<MediaMetadataCompat, MutableList<MediaMetadataCompat>>()
-    private val _recentlyAdded = mutableListOf<MediaMetadataCompat>()
-    private val _albums = sortedMapOf<MediaMetadataCompat, MutableList<MediaMetadataCompat>>({ album1, album2 ->
-        album1.album?.compareTo(album2.album!!, true) ?: 0
-    })
-    private val _artists = sortedMapOf<MediaMetadataCompat, MutableList<MediaMetadataCompat>>({ artist1, artist2 ->
-        artist1.artist?.compareTo(artist2.artist!!, true) ?: 0
-    })
+    private var songs = listOf<MediaMetadataCompat>()
+    private var _playlists: Map<MediaMetadataCompat, MutableList<MediaMetadataCompat>> = mapOf()
+    private var _recentlyAdded = listOf<MediaMetadataCompat>()
+    private var _albums: Map<MediaMetadataCompat, List<MediaMetadataCompat>> = mapOf()
+    private var _artists: Map<MediaMetadataCompat, List<MediaMetadataCompat>> = mapOf()
 
     val playlists: Map<MediaMetadataCompat, List<MediaMetadataCompat>>
-        get() = _playlists
+        get() = HashMap(_playlists)
     val recentlyAdded: List<MediaMetadataCompat>
         get() = _recentlyAdded
     val albums: Map<MediaMetadataCompat, List<MediaMetadataCompat>>
         get() = _albums
     val artists: Map<MediaMetadataCompat, List<MediaMetadataCompat>>
         get() = _artists
+    val queue: List<MediaMetadataCompat>?
+        get() = musicSource.queue
 
     private val recentlyAddedMetadata: MediaMetadataCompat = buildRecentlyAddedMetadata()
 
@@ -42,54 +46,35 @@ class BrowseTree(private val musicSource: FileMusicSource, private val onUpdate:
     }
 
     private fun sortSongs(sourceChange: FileMusicSource.SourceChange) {
-        sourceChange.also { change ->
-            change.allSongs?.let { list ->
-                songs.clear()
-                _albums.clear()
-                _artists.clear()
-                list.forEach { mediaItem ->
-                    songs.add(mediaItem)
-
-                    val album = _albums.findValueByKey { it.album == mediaItem.displayDescription } ?: buildAlbumRoot(mediaItem)
-                    album += mediaItem
-
-                    mediaItem.findArtists().forEach { artist ->
-                        val artistRoot = _artists.findValueByKey { it.artist == artist } ?: buildArtistRoot(artist)
-                        artistRoot += mediaItem
-                        _artists.find { it.artist == artist }?.apply {
-                            description?.extras?.let { extras ->
-                                extras.putInt(EXTRA_SONGS_NUM, extras.getInt(EXTRA_SONGS_NUM) + 1)
-                            }
+        CoroutineScope(Dispatchers.Main).launch {
+            sourceChange.also { change ->
+                change.allSongs?.let { list ->
+                    if (!(songs equals list)) {
+                        buildSongs(list).also {
+                            songs = it.first
+                            _albums = it.second
+                            _artists = it.third
                         }
+                        onUpdate(ALL_SONGS_ROOT)
+                        onUpdate(ARTISTS_ROOT)
+                        onUpdate(ALBUMS_ROOT)
                     }
                 }
-                onUpdate(ALL_SONGS_ROOT)
-                onUpdate(ARTISTS_ROOT)
-                onUpdate(ALBUMS_ROOT)
-            }
-            change.recentlyAdded?.let { list ->
-                _recentlyAdded.clear()
-                _recentlyAdded.addAll(list)
-                recentlyAddedMetadata.description?.extras?.let { extras ->
-                    extras.putInt(EXTRA_SONGS_NUM, list.size)
-                    extras.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, list.getOrNull(0)?.displayIconUri.toString())
-                }
-                onUpdate(PLAYLISTS_ROOT)
-                onUpdate("${PLAYLISTS_ROOT}${PLAYLIST_RECENTLY_ADDED}")
-            }
-            change.playlists?.let { list: List<Pair<String, List<MediaMetadataCompat>>> ->
-                _playlists.clear()
-                list.forEach { (playlistName, playlistSongs) ->
-                    val playlistRoot = _playlists.findValueByKey { it.title == playlistName } ?: buildPlaylistRoot(playlistName)
-                    playlistRoot += playlistSongs
-                    _playlists.find { it.title == playlistName }?.apply {
-                        description?.extras?.let { extras ->
-                            extras.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, playlistSongs.getOrNull(0)?.displayIconUri.toString())
-                            extras.putInt(EXTRA_SONGS_NUM, playlistSongs.size)
+                change.recentlyAdded?.let { list ->
+                    if (!(_recentlyAdded equals list)) {
+                        _recentlyAdded = list
+                        recentlyAddedMetadata.description?.extras?.let { extras ->
+                            extras.putInt(EXTRA_SONGS_NUM, list.size)
+                            extras.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, list.getOrNull(0)?.displayIconUri.toString())
                         }
+                        onUpdate(PLAYLISTS_ROOT)
+                        onUpdate("${PLAYLISTS_ROOT}${PLAYLIST_RECENTLY_ADDED}")
                     }
                 }
-                onUpdate(PLAYLISTS_ROOT)
+                change.playlists?.let { list ->
+                    _playlists = buildPlaylists(list)
+                    onUpdate(PLAYLISTS_ROOT)
+                }
             }
         }
     }
@@ -100,34 +85,77 @@ class BrowseTree(private val musicSource: FileMusicSource, private val onUpdate:
         mediaId.startsWith(ALL_SONGS_ROOT) -> songs
         mediaId.startsWith(PLAYLISTS_ROOT) -> {
             if (mediaId == PLAYLISTS_ROOT) {
-                _playlists.keys.toMutableList().apply { add(0, recentlyAddedMetadata) }
+                playlists.keys.toMutableList().apply { add(0, recentlyAddedMetadata) }
             } else {
                 val playlistId = mediaId.substring(PLAYLISTS_ROOT.length)
                 if (playlistId == PLAYLIST_RECENTLY_ADDED) {
-                    _recentlyAdded
+                    recentlyAdded
                 } else {
-                    _playlists.findValueByKey { it.title == playlistId }?.toList()
+                    playlists.findValueByKey { it.title == playlistId }?.toList()
                 }
             }
         }
         mediaId.startsWith(ALBUMS_ROOT) -> {
             if (mediaId == ALBUMS_ROOT) {
-                _albums.keys.toList()
+                albums.keys.toList()
             } else {
-                _albums.findValueByKey { it.album == mediaId.substring(ALBUMS_ROOT.length) }?.toList()
+                albums.findValueByKey { it.album == mediaId.substring(ALBUMS_ROOT.length) }?.toList()
             }
         }
         mediaId.startsWith(ARTISTS_ROOT) -> {
             if (mediaId == ARTISTS_ROOT) {
-                _artists.keys.toList()
+                artists.keys.toList()
             } else {
-                _artists.findValueByKey { it.artist == mediaId.substring(ARTISTS_ROOT.length) }?.toList()
+                artists.findValueByKey { it.artist == mediaId.substring(ARTISTS_ROOT.length) }?.toList()
             }
         }
         else -> throw IllegalArgumentException("Invalid id entered: $mediaId")
     }
 
     fun search(query: String, extras: Bundle?): List<MediaMetadataCompat> = musicSource.search(query, extras)
+
+    private suspend fun buildSongs(list: List<MediaMetadataCompat>): Triple<List<MediaMetadataCompat>, Map<MediaMetadataCompat, List<MediaMetadataCompat>>, Map<MediaMetadataCompat, List<MediaMetadataCompat>>> =
+        withContext(Dispatchers.Default) {
+            val songs = arrayListOf<MediaMetadataCompat>()
+            val albums = sortedMapOf<MediaMetadataCompat, MutableList<MediaMetadataCompat>>(compareBy {
+                it.album?.toLowerCase(Locale.getDefault())
+            })
+            val artists = sortedMapOf<MediaMetadataCompat, MutableList<MediaMetadataCompat>>(compareBy {
+                it.artist?.toLowerCase(Locale.getDefault())
+            })
+            list.forEach { mediaItem ->
+                songs.add(mediaItem)
+
+                val album = albums.findValueByKey { it.album == mediaItem.displayDescription } ?: buildAlbumRoot(albums, mediaItem)
+                album += mediaItem
+
+                mediaItem.findArtists().forEach { artist ->
+                    val artistRoot = artists.findValueByKey { it.artist == artist } ?: buildArtistRoot(artists, artist)
+                    artistRoot += mediaItem
+                    artists.find { it.artist == artist }?.apply {
+                        description?.extras?.let { extras ->
+                            extras.putInt(EXTRA_SONGS_NUM, extras.getInt(EXTRA_SONGS_NUM) + 1)
+                        }
+                    }
+                }
+            }
+            Triple(songs, albums, artists)
+        }
+
+    private suspend fun buildPlaylists(list: List<Pair<String, List<MediaMetadataCompat>>>) = withContext(Dispatchers.Default) {
+        val playlists = mutableMapOf<MediaMetadataCompat, MutableList<MediaMetadataCompat>>()
+        list.forEach { (playlistName, playlistSongs) ->
+            val playlistRoot = playlists.findValueByKey { it.title == playlistName } ?: buildPlaylistRoot(playlists, playlistName)
+            playlistRoot += playlistSongs
+            playlists.find { it.title == playlistName }?.apply {
+                description?.extras?.let { extras ->
+                    extras.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, playlistSongs.getOrNull(0)?.displayIconUri.toString())
+                    extras.putInt(EXTRA_SONGS_NUM, playlistSongs.size)
+                }
+            }
+        }
+        playlists
+    }
 
     private fun buildRecentlyAddedMetadata(): MediaMetadataCompat = MediaMetadataCompat.Builder().apply {
         id = "${PLAYLISTS_ROOT}${PLAYLIST_RECENTLY_ADDED}"
@@ -136,7 +164,7 @@ class BrowseTree(private val musicSource: FileMusicSource, private val onUpdate:
         downloadStatus = MediaDescriptionCompat.STATUS_DOWNLOADED
     }.build()
 
-    private fun buildPlaylistRoot(name: String): MutableList<MediaMetadataCompat> {
+    private fun buildPlaylistRoot(playlists: MutableMap<MediaMetadataCompat, MutableList<MediaMetadataCompat>>, name: String): MutableList<MediaMetadataCompat> {
         val playlistMetadata = MediaMetadataCompat.Builder().apply {
             id = "${PLAYLISTS_ROOT}${name}"
             title = name
@@ -144,12 +172,12 @@ class BrowseTree(private val musicSource: FileMusicSource, private val onUpdate:
             downloadStatus = MediaDescriptionCompat.STATUS_DOWNLOADED
         }.build()
 
-        _playlists[playlistMetadata] = mutableListOf()
+        playlists[playlistMetadata] = mutableListOf()
 
-        return _playlists[playlistMetadata]!!
+        return playlists[playlistMetadata]!!
     }
 
-    private fun buildAlbumRoot(mediaItem: MediaMetadataCompat): MutableList<MediaMetadataCompat> {
+    private fun buildAlbumRoot(albums: SortedMap<MediaMetadataCompat, MutableList<MediaMetadataCompat>>, mediaItem: MediaMetadataCompat): MutableList<MediaMetadataCompat> {
         val albumMetadata = MediaMetadataCompat.Builder().apply {
             id = "${ALBUMS_ROOT}${mediaItem.displayDescription.toString()}"
             title = mediaItem.displayDescription
@@ -160,12 +188,12 @@ class BrowseTree(private val musicSource: FileMusicSource, private val onUpdate:
             downloadStatus = MediaDescriptionCompat.STATUS_DOWNLOADED
         }.build()
 
-        _albums[albumMetadata] = mutableListOf()
+        albums[albumMetadata] = mutableListOf()
 
-        return _albums[albumMetadata]!!
+        return albums[albumMetadata]!!
     }
 
-    private fun buildArtistRoot(artist: String): MutableList<MediaMetadataCompat> {
+    private fun buildArtistRoot(artists: SortedMap<MediaMetadataCompat, MutableList<MediaMetadataCompat>>, artist: String): MutableList<MediaMetadataCompat> {
         val artistMetadata = MediaMetadataCompat.Builder().apply {
             id = "${ARTISTS_ROOT}${artist}"
             title = artist
@@ -174,9 +202,9 @@ class BrowseTree(private val musicSource: FileMusicSource, private val onUpdate:
             downloadStatus = MediaDescriptionCompat.STATUS_DOWNLOADED
         }.build()
 
-        _artists[artistMetadata] = mutableListOf()
+        artists[artistMetadata] = mutableListOf()
 
-        return _artists[artistMetadata]!!
+        return artists[artistMetadata]!!
     }
 
     override fun iterator(): Iterator<MediaMetadataCompat> = songs.iterator()
@@ -210,11 +238,25 @@ inline fun Map<MediaMetadataCompat, List<MediaMetadataCompat>>.findValueByKey(cr
     return null
 }
 
+private infix fun List<MediaMetadataCompat>?.equals(other: List<MediaMetadataCompat>?): Boolean {
+    if (this == null || other == null) return this == other
+    if (this.size != other.size) return false
+
+    forEachIndexed { index, song ->
+        if (!(song equals other[index])) return false
+    }
+    return true
+}
+
+private infix fun MediaMetadataCompat.equals(other: MediaMetadataCompat): Boolean =
+    this.id == other.id && this.displayTitle == other.displayTitle && this.displaySubtitle == other.displayTitle && this.displayDescription == other.displayDescription && this.displayIconUri == other.displayIconUri
+
 const val ROOT = "/"
 const val ALL_SONGS_ROOT = "_ALL_SONGS_"
 const val PLAYLISTS_ROOT = "_PLAYLISTS_"
 const val ALBUMS_ROOT = "_ALBUMS_"
 const val ARTISTS_ROOT = "_ARTISTS_"
+const val QUEUE_ROOT = "_QUEUE_"
 
 const val EXTRA_SONGS_NUM = "songs_num"
 

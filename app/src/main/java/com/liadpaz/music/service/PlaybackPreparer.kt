@@ -21,6 +21,7 @@ import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.upstream.DataSource
 import com.liadpaz.music.service.utils.BrowseTree
 import com.liadpaz.music.service.utils.PLAYLISTS_ROOT
+import com.liadpaz.music.service.utils.QUEUE_ROOT
 import com.liadpaz.music.service.utils.findValueByKey
 import com.liadpaz.music.utils.extensions.*
 
@@ -38,9 +39,17 @@ class PlaybackPreparer(private val browseTree: BrowseTree, private val exoPlayer
     override fun onPrepare(playWhenReady: Boolean) = Unit
 
     override fun onPrepareFromMediaId(mediaId: String, playWhenReady: Boolean, extras: Bundle?) {
-        val shuffle = extras?.getBoolean(EXTRA_SHUFFLE) ?: false
+        val windowIndex = extras!!.getInt(EXTRA_POSITION)
+        if (mediaId == QUEUE_ROOT) {
+            mediaSource = ConcatenatingMediaSource(*browseTree.queue!!.toMediaSources(dataSourceFactory, extractorsFactory).toTypedArray())
+            exoPlayer.prepare(mediaSource)
+            exoPlayer.seekTo(windowIndex, 0)
+            exoPlayer.playWhenReady = false
+            return
+        }
+        val shuffle = extras.getBoolean(EXTRA_SHUFFLE)
 
-        val metadataList = when (extras?.getString(EXTRA_FROM)) {
+        val metadataList = when (extras.getString(EXTRA_FROM)) {
             EXTRA_FROM_PLAYLISTS -> buildPlaylistWithPlaylist((extras[EXTRA_PLAYLIST] as String).substring(PLAYLISTS_ROOT.length)).apply { if (shuffle) shuffle() }
             EXTRA_FROM_ALBUMS -> buildPlaylistWithAlbum(extras[EXTRA_ALBUM] as String).apply { if (shuffle) shuffle() }
             EXTRA_FROM_ARTISTS -> buildPlaylistWithArtist(extras[EXTRA_ARTIST] as String).apply { if (shuffle) shuffle() }
@@ -49,10 +58,8 @@ class PlaybackPreparer(private val browseTree: BrowseTree, private val exoPlayer
 
         mediaSource = ConcatenatingMediaSource(*metadataList.toMediaSources(dataSourceFactory, extractorsFactory).toTypedArray())
 
-        val initialWindowIndex = extras!!.getInt(EXTRA_POSITION, 0)
-
         exoPlayer.prepare(mediaSource)
-        exoPlayer.seekTo(initialWindowIndex, 0)
+        exoPlayer.seekTo(windowIndex, 0)
     }
 
     override fun onPrepareFromSearch(query: String, playWhenReady: Boolean, extras: Bundle?) {

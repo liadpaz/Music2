@@ -33,15 +33,14 @@ import com.google.android.exoplayer2.video.VideoRendererEventListener
 import com.liadpaz.music.repository.Repository
 import com.liadpaz.music.service.utils.BrowseTree
 import com.liadpaz.music.service.utils.FileMusicSource
+import com.liadpaz.music.service.utils.QUEUE_ROOT
 import com.liadpaz.music.service.utils.ROOT
 import com.liadpaz.music.utils.extensions.flag
 
 class MusicService : MediaBrowserServiceCompat() {
 
     private lateinit var notificationManager: NotificationManager
-    private val musicSource: FileMusicSource by lazy {
-        FileMusicSource(this, repository)
-    }
+    private lateinit var musicSource: FileMusicSource
 
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var mediaSessionConnector: MediaSessionConnector
@@ -66,7 +65,7 @@ class MusicService : MediaBrowserServiceCompat() {
 
     private val playerListener = PlayerListener()
 
-    private val exoPlayer by lazy {
+    private val exoPlayer: SimpleExoPlayer by lazy {
         SimpleExoPlayer.Builder(applicationContext, AudioOnlyRenderersFactory(this)).build().apply {
             setAudioAttributes(mAudioAttributes, true)
             setHandleAudioBecomingNoisy(true)
@@ -90,6 +89,11 @@ class MusicService : MediaBrowserServiceCompat() {
         super.onCreate()
 
         repository.granted.observeForever(permissionGrantedObserver)
+
+        musicSource = FileMusicSource(this, repository) { position ->
+            mediaSession.controller.transportControls.playFromMediaId(QUEUE_ROOT, bundleOf(EXTRA_POSITION to position))
+            mediaSession.controller.transportControls.pause()
+        }
 
         val sessionActivityPendingIntent =
             packageManager?.getLaunchIntentForPackage(packageName)?.let { sessionIntent ->
@@ -141,7 +145,7 @@ class MusicService : MediaBrowserServiceCompat() {
     }
 
     override fun onGetRoot(clientPackageName: String, clientUid: Int, rootHints: Bundle?): BrowserRoot? =
-        BrowserRoot(ROOT, bundleOf(Pair("android.media.browse.SEARCH_SUPPORTED", true), Pair("android.media.browse.CONTENT_STYLE_SUPPORTED", true)))
+        BrowserRoot(ROOT, bundleOf("android.media.browse.SEARCH_SUPPORTED" to true, "android.media.browse.CONTENT_STYLE_SUPPORTED" to true))
 
     override fun onLoadChildren(parentId: String, result: Result<List<MediaBrowserCompat.MediaItem>>) {
         result.sendResult(browseTree[parentId]?.map { item -> MediaBrowserCompat.MediaItem(item.description, item.flag) })
@@ -152,7 +156,6 @@ class MusicService : MediaBrowserServiceCompat() {
     }
 
     private inner class PlayerNotificationListener : PlayerNotificationManager.NotificationListener {
-
         override fun onNotificationPosted(notificationId: Int, notification: Notification, ongoing: Boolean) {
             if (ongoing && !isForegroundService) {
                 startForegroundService(Intent(applicationContext, this@MusicService.javaClass))
@@ -193,11 +196,11 @@ class MusicService : MediaBrowserServiceCompat() {
 
         override fun onTimelineChanged(timeline: Timeline, @Player.TimelineChangeReason reason: Int) {
             exoPlayer.playWhenReady = true
+            val window = Timeline.Window()
             repository.setQueuePosition(exoPlayer.currentWindowIndex)
             repository.setQueue(timeline.let {
                 val queue = arrayListOf<MediaSessionCompat.QueueItem>()
                 for (i in 0 until it.windowCount) {
-                    val window = Timeline.Window()
                     queue.add(MediaSessionCompat.QueueItem(it.getWindow(i, window).tag as MediaDescriptionCompat, i.toLong()))
                 }
                 queue

@@ -56,9 +56,9 @@
             app:layout_constraintTop_toBottomOf="@+id/divider"
             app:smallPlaylists="@{viewModel.playlists}" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCancel"
-            style="@style/Widget.MaterialComponents.Button.TextButton.Dialog"
+            style="@style/TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -69,9 +69,9 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/rvPlaylists" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnNewPlaylist"
-            style="@style/Widget.MaterialComponents.Button.TextButton.Dialog"
+            style="@style/TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"

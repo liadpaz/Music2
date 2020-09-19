@@ -20,7 +20,7 @@ interface MusicSource {
     fun search(query: String, extras: Bundle?): List<MediaMetadataCompat>
 }
 
-class FileMusicSource(context: Context, private val repository: Repository) : LiveData<FileMusicSource.SourceChange>(), MusicSource, Iterable<MediaMetadataCompat> {
+class FileMusicSource(context: Context, private val repository: Repository, private val onLoadQueue: (Int) -> Unit) : LiveData<FileMusicSource.SourceChange>(), MusicSource, Iterable<MediaMetadataCompat> {
 
     val recentlyAddedName = repository.recentlyAddedName
 
@@ -37,6 +37,9 @@ class FileMusicSource(context: Context, private val repository: Repository) : Li
     private var allSongs: List<MediaMetadataCompat>? = null
     private var playlistsIds: MutableList<Pair<String, MutableList<Int>>>? = null
 
+    var queue: List<MediaMetadataCompat>? = null
+        private set
+
     private val allSongsObserver = Observer { songs: ArrayList<MediaMetadataCompat>? ->
         this.songs = songs
         postValue(SourceChange(allSongs = this.songs, recentlyAdded = recentlyAdded, playlists = createPlaylists(playlistsIds)))
@@ -45,8 +48,10 @@ class FileMusicSource(context: Context, private val repository: Repository) : Li
         recentlyAdded = songs
         postValue(SourceChange(allSongs = this.songs, recentlyAdded = recentlyAdded, playlists = createPlaylists(playlistsIds)))
     }
-    private val playlistsObserver = Observer { songs: ArrayList<MediaMetadataCompat>? ->
+    private val playlistsObserver = Observer { songs: ArrayList<MediaMetadataCompat> ->
         allSongs = songs
+        queue = createQueue(dataSharedPrefs.getQueue())
+        onLoadQueue(dataSharedPrefs.getQueuePosition())
         postValue(SourceChange(allSongs = this.songs, recentlyAdded = recentlyAdded, playlists = createPlaylists(playlistsIds)))
     }
     private val repositoryPlaylistsObserver = Observer { playlists: MutableList<Pair<String, MutableList<Int>>>? ->
@@ -64,11 +69,21 @@ class FileMusicSource(context: Context, private val repository: Repository) : Li
     private fun createPlaylists(playlists: MutableList<Pair<String, MutableList<Int>>>?): List<Pair<String, List<MediaMetadataCompat>>>? =
         allSongs?.let { all ->
             playlists?.map { (name, songsIds) ->
-                name to songsIds.map { id ->
-                    all.find { it.id == id.toString() }!!
+                val playlist = mutableListOf<MediaMetadataCompat>()
+                songsIds.forEach { id ->
+                    all.find { it.id == id.toString() }?.let { playlist.add(it) }
                 }
+                name to playlist
             }
         }
+
+    private fun createQueue(list: List<Int>): List<MediaMetadataCompat> {
+        val queue = mutableListOf<MediaMetadataCompat>()
+        list.forEach { queueItem ->
+            allSongs!!.find { it.id == queueItem.toString() }?.let { queue.add(it) }
+        }
+        return queue
+    }
 
     override fun onActive() {
         allSongProvider.observeForever(allSongsObserver)

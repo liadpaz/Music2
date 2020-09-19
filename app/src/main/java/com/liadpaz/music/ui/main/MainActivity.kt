@@ -6,6 +6,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.view.View
@@ -247,10 +249,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
-    }
-
-    override fun onResume() {
-        super.onResume()
         handleIntent(intent)
     }
 
@@ -300,9 +298,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleIntent(intent: Intent?) {
         if (intent?.extras?.getString(EXTRA_TYPE) == MusicService::class.java.canonicalName) {
-            if (bottomSheetState == BottomSheetBehavior.STATE_COLLAPSED) {
-                bottomSheetState = BottomSheetBehavior.STATE_EXPANDED
-            }
+            Handler(Looper.getMainLooper()).postDelayed({
+                if (bottomSheetState == BottomSheetBehavior.STATE_COLLAPSED) {
+                    bottomSheetState = BottomSheetBehavior.STATE_EXPANDED
+                }
+            }, 1)
         }
     }
 }

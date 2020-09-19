@@ -37,14 +37,15 @@
         android:layout_marginTop="16dp"
         android:ems="10"
         android:hint="@string/dialog_playlist_name"
+        android:importantForAutofill="no"
         android:inputType="textPersonName"
         app:layout_constraintEnd_toEndOf="@+id/btnApply"
         app:layout_constraintStart_toStartOf="@+id/btnCancel"
         app:layout_constraintTop_toBottomOf="@+id/divider" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnCancel"
-        style="@style/Widget.MaterialComponents.Button.TextButton.Dialog"
+        style="@style/TextButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
@@ -57,9 +58,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/etPlaylistName" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnApply"
-        style="@style/Widget.MaterialComponents.Button.TextButton.Dialog"
+        style="@style/TextButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"

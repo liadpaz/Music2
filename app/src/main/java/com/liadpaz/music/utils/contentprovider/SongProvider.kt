@@ -87,7 +87,7 @@ class SongProvider(private val context: Context, @Order var sortOrder: String = 
 
     companion object {
         private val PROJECTION =
-            arrayOf(MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.ARTIST, MediaStore.Audio.Media.ALBUM, MediaStore.Audio.Media.ALBUM_ID)
+            arrayOf(MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.ARTIST, MediaStore.Audio.Media.ALBUM, MediaStore.Audio.Media.ALBUM_ID, MediaStore.Audio.Media.DURATION)
 
         const val FOLDER_DEFAULT = "Music"
 
@@ -114,8 +114,7 @@ const val ORDER_LAST_ADDED = "${MediaStore.Audio.Media.DATE_MODIFIED} DESC"
 @StringDef(value = [ORDER_DEFAULT, ORDER_LAST_ADDED])
 annotation class Order
 
-fun MediaMetadataCompat.findArtists() =
-    artistsRegex.findAll(displaySubtitle.toString()).toList().map(MatchResult::value)
+fun MediaMetadataCompat.findArtists() = artistsRegex.findAll(displaySubtitle.toString()).toList().map(MatchResult::value)
 
 fun MediaMetadataCompat.findFirstArtist() = findArtists()[0]
 
