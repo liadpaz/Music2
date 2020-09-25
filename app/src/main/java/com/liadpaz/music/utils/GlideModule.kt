@@ -11,7 +11,6 @@ import com.liadpaz.music.R
 
 @GlideModule
 class GlideModule : AppGlideModule() {
-
     override fun isManifestParsingEnabled(): Boolean = false
 
     override fun applyOptions(context: Context, builder: GlideBuilder) {

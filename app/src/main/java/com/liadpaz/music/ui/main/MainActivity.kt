@@ -6,8 +6,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.view.View
@@ -32,7 +30,7 @@ import com.liadpaz.music.service.MusicService
 import com.liadpaz.music.service.MusicService.Companion.EXTRA_TYPE
 import com.liadpaz.music.ui.adapters.ExtendedSongViewPagerAdapter
 import com.liadpaz.music.ui.adapters.QueueAdapter
-import com.liadpaz.music.ui.utils.ProgressSeekBar
+import com.liadpaz.music.ui.adapters.QueueAdapter.Companion.PAYLOAD_PLAYING
 import com.liadpaz.music.ui.viewmodels.MainViewModel
 import com.liadpaz.music.ui.viewmodels.PlayingViewModel
 import com.liadpaz.music.utils.InjectorUtils
@@ -134,9 +132,10 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }).also { itemTouchHelper ->
-            binding.rvQueue.adapter = QueueAdapter({
-                playingViewModel.skipToQueueItem(it)
-            }) {
+            binding.rvQueue.adapter = QueueAdapter(
+                    {
+                        playingViewModel.skipToQueueItem(it)
+                    }) {
                 itemTouchHelper.startDrag(it)
             }
         }.attachToRecyclerView(binding.rvQueue)
@@ -147,6 +146,7 @@ class MainActivity : AppCompatActivity() {
             isQueueChanging = false
         }
         playingViewModel.queuePosition.observe(this) {
+            binding.rvQueue.adapter?.notifyItemChanged(it, PAYLOAD_PLAYING)
             if (!isQueueChanging) {
                 binding.viewPager.setCurrentItem(it, smoothScroll)
                 smoothScroll = true
@@ -155,12 +155,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        binding.ibDown.setOnClickListener {
-            bottomSheetState = BottomSheetBehavior.STATE_COLLAPSED
-        }
-        binding.ibMore.setOnClickListener {
-            // TODO: set on more menu
-        }
+        binding.bottomSheet.setOnClickListener { bottomSheetState = BottomSheetBehavior.STATE_EXPANDED }
+        binding.ibDown.setOnClickListener { bottomSheetState = BottomSheetBehavior.STATE_COLLAPSED }
+        binding.ibMore.setOnClickListener { /* TODO: set on more menu */ }
 
         binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
@@ -171,18 +168,14 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
-        binding.viewPager.requestDisallowInterceptTouchEvent(true)
 
         binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, position: Int, fromUser: Boolean) = Unit
 
-            override fun onStartTrackingTouch(seekBar: SeekBar) {
-                (seekBar as ProgressSeekBar).isUser = true
-            }
+            override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
 
             override fun onStopTrackingTouch(seekBar: SeekBar) {
                 playingViewModel.seekTo(seekBar.progress * 1000L)
-                (seekBar as ProgressSeekBar).isUser = false
             }
         })
 
@@ -207,14 +200,12 @@ class MainActivity : AppCompatActivity() {
                 override fun onStateChanged(bottomSheet: View, newState: Int) {
                     when (newState) {
                         BottomSheetBehavior.STATE_COLLAPSED -> {
-                            binding.bottomSheet.setOnClickListener {
-                                bottomSheetState = BottomSheetBehavior.STATE_EXPANDED
-                            }
+                            binding.bottomSheet.isClickable = true
                             window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                             setButtonsState(View.INVISIBLE)
                         }
                         BottomSheetBehavior.STATE_EXPANDED -> {
-                            binding.bottomSheet.setOnClickListener { }
+                            binding.bottomSheet.isClickable = false
                             // TODO: check if screen should stay on
                             setButtonsState(View.VISIBLE)
                         }
@@ -237,13 +228,13 @@ class MainActivity : AppCompatActivity() {
             override fun onTransitionCompleted(motionLayout: MotionLayout, currentId: Int) {
                 if (currentId == R.id.expanded) {
                     motionLayout.setTransition(R.id.transition_bottomsheet)
-                    binding.bottomSheet.isNestedScrollingEnabled = false
+                    bottomSheet.isDraggable = true
                 }
             }
 
             override fun onTransitionStarted(motionLayout: MotionLayout, startId: Int, endId: Int) {
                 if (motionLayout.progress < 100F && startId == R.id.expanded && endId == R.id.queue_shown) {
-                    binding.bottomSheet.isNestedScrollingEnabled = true
+                    bottomSheet.isDraggable = false
                     binding.rvQueue.stopScroll()
                     (binding.rvQueue.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(playingViewModel.queuePosition.value!!, 0)
                 }
@@ -298,11 +289,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleIntent(intent: Intent?) {
         if (intent?.extras?.getString(EXTRA_TYPE) == MusicService::class.java.canonicalName) {
-            Handler(Looper.getMainLooper()).postDelayed({
-                if (bottomSheetState == BottomSheetBehavior.STATE_COLLAPSED) {
-                    bottomSheetState = BottomSheetBehavior.STATE_EXPANDED
-                }
-            }, 1)
+            binding.root.postDelayed({
+                                         if (bottomSheetState == BottomSheetBehavior.STATE_COLLAPSED) {
+                                             bottomSheetState = BottomSheetBehavior.STATE_EXPANDED
+                                         }
+                                     }, 1)
         }
     }
 }

@@ -14,10 +14,10 @@ import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.os.bundleOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.liadpaz.music.service.MusicService.QueueEditor.Companion.ACTION_MOVE_ITEM
-import com.liadpaz.music.service.MusicService.QueueEditor.Companion.ACTION_REMOVE_ITEM
-import com.liadpaz.music.service.MusicService.QueueEditor.Companion.EXTRA_FROM_POSITION
-import com.liadpaz.music.service.MusicService.QueueEditor.Companion.EXTRA_TO_POSITION
+import com.liadpaz.music.service.utils.QueueEditor.Companion.ACTION_MOVE_ITEM
+import com.liadpaz.music.service.utils.QueueEditor.Companion.ACTION_REMOVE_ITEM
+import com.liadpaz.music.service.utils.QueueEditor.Companion.EXTRA_FROM_POSITION
+import com.liadpaz.music.service.utils.QueueEditor.Companion.EXTRA_TO_POSITION
 import com.liadpaz.music.utils.extensions.id
 
 class ServiceConnection private constructor(context: Context, serviceComponent: ComponentName) {

@@ -3,32 +3,19 @@ package com.liadpaz.music.service
 import android.net.Uri
 import android.os.Bundle
 import android.os.ResultReceiver
-import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import com.google.android.exoplayer2.ControlDispatcher
+import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
-import com.google.android.exoplayer2.extractor.Extractor
-import com.google.android.exoplayer2.extractor.ExtractorsFactory
-import com.google.android.exoplayer2.extractor.flac.FlacExtractor
-import com.google.android.exoplayer2.extractor.mp3.Mp3Extractor
-import com.google.android.exoplayer2.extractor.mp4.Mp4Extractor
-import com.google.android.exoplayer2.extractor.wav.WavExtractor
-import com.google.android.exoplayer2.source.ConcatenatingMediaSource
-import com.google.android.exoplayer2.source.MediaSource
-import com.google.android.exoplayer2.upstream.DataSource
 import com.liadpaz.music.service.utils.BrowseTree
 import com.liadpaz.music.service.utils.PLAYLISTS_ROOT
-import com.liadpaz.music.service.utils.QUEUE_ROOT
 import com.liadpaz.music.service.utils.findValueByKey
 import com.liadpaz.music.utils.extensions.*
 
-class PlaybackPreparer(private val browseTree: BrowseTree, private val exoPlayer: SimpleExoPlayer, private val dataSourceFactory: DataSource.Factory) : MediaSessionConnector.PlaybackPreparer {
-
-    private var mediaSource = ConcatenatingMediaSource()
-    private val extractorsFactory = MediaExtractorsFactory()
+class PlaybackPreparer(private val browseTree: BrowseTree, private val player: SimpleExoPlayer) : MediaSessionConnector.PlaybackPreparer {
 
     override fun getSupportedPrepareActions(): Long =
         PlaybackStateCompat.ACTION_PREPARE_FROM_MEDIA_ID or
@@ -39,15 +26,7 @@ class PlaybackPreparer(private val browseTree: BrowseTree, private val exoPlayer
     override fun onPrepare(playWhenReady: Boolean) = Unit
 
     override fun onPrepareFromMediaId(mediaId: String, playWhenReady: Boolean, extras: Bundle?) {
-        val windowIndex = extras!!.getInt(EXTRA_POSITION)
-        if (mediaId == QUEUE_ROOT) {
-            mediaSource = ConcatenatingMediaSource(*browseTree.queue!!.toMediaSources(dataSourceFactory, extractorsFactory).toTypedArray())
-            exoPlayer.prepare(mediaSource)
-            exoPlayer.seekTo(windowIndex, 0)
-            exoPlayer.playWhenReady = false
-            return
-        }
-        val shuffle = extras.getBoolean(EXTRA_SHUFFLE)
+        val shuffle = extras!!.getBoolean(EXTRA_SHUFFLE)
 
         val metadataList = when (extras.getString(EXTRA_FROM)) {
             EXTRA_FROM_PLAYLISTS -> buildPlaylistWithPlaylist((extras[EXTRA_PLAYLIST] as String).substring(PLAYLISTS_ROOT.length)).apply { if (shuffle) shuffle() }
@@ -56,17 +35,15 @@ class PlaybackPreparer(private val browseTree: BrowseTree, private val exoPlayer
             else -> browseTree.toMutableList().apply { if (shuffle) shuffle() }
         }
 
-        mediaSource = ConcatenatingMediaSource(*metadataList.toMediaSources(dataSourceFactory, extractorsFactory).toTypedArray())
-
-        exoPlayer.prepare(mediaSource)
-        exoPlayer.seekTo(windowIndex, 0)
+        player.setMediaItems(metadataList.map { MediaItem.Builder().setUri(it.mediaUri).setMediaId(it.id).setTag(it.description).build() }, extras.getInt(EXTRA_POSITION), 0)
+        player.prepare()
     }
 
     override fun onPrepareFromSearch(query: String, playWhenReady: Boolean, extras: Bundle?) {
         val metadataList = browseTree.search(query, extras ?: Bundle.EMPTY)
         if (metadataList.isNotEmpty()) {
-            mediaSource = ConcatenatingMediaSource(*metadataList.toMediaSources(dataSourceFactory, extractorsFactory).toTypedArray())
-            exoPlayer.prepare(mediaSource)
+            player.setMediaItems(metadataList.map { MediaItem.Builder().setUri(it.mediaUri).setMediaId(it.id).setTag(it.description).build() })
+            player.prepare()
         }
     }
 
@@ -85,22 +62,6 @@ class PlaybackPreparer(private val browseTree: BrowseTree, private val exoPlayer
 
     private fun buildPlaylistWithArtist(artist: String): MutableList<MediaMetadataCompat> =
         browseTree.artists.findValueByKey { it.artist.containsCaseInsensitive(artist) }!!.toMutableList()
-
-    fun addQueueItem(item: MediaDescriptionCompat, position: Int) =
-        mediaSource.addMediaSource(position, item.toMediaSource(dataSourceFactory, extractorsFactory))
-
-
-    fun addQueueItem(item: MediaDescriptionCompat) =
-        mediaSource.addMediaSource(item.toMediaSource(dataSourceFactory, extractorsFactory))
-
-    fun moveQueueItem(fromIndex: Int, toIndex: Int) = mediaSource.moveMediaSource(fromIndex, toIndex)
-
-    fun removeQueueItem(position: Int): MediaSource = mediaSource.removeMediaSource(position)
-
-    private class MediaExtractorsFactory : ExtractorsFactory {
-        override fun createExtractors(): Array<Extractor> =
-            arrayOf(Mp3Extractor(), Mp4Extractor(), FlacExtractor(), WavExtractor())
-    }
 }
 
 const val PLAYLIST_RECENTLY_ADDED = "playlist_recently_added"

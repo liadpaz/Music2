@@ -3,12 +3,7 @@ package com.liadpaz.music.utils.extensions
 import android.graphics.Bitmap
 import android.net.Uri
 import android.support.v4.media.MediaBrowserCompat.MediaItem
-import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
-import com.google.android.exoplayer2.extractor.ExtractorsFactory
-import com.google.android.exoplayer2.source.MediaSource
-import com.google.android.exoplayer2.source.ProgressiveMediaSource
-import com.google.android.exoplayer2.upstream.DataSource
 
 inline val MediaMetadataCompat.id: String?
     get() = getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID)
@@ -179,6 +174,13 @@ inline var MediaMetadataCompat.Builder.displayIconUri: String?
         putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, value)
     }
 
+inline var MediaMetadataCompat.Builder.displayIcon: Bitmap?
+    @Deprecated(NO_GET, level = DeprecationLevel.ERROR)
+    get() = throw IllegalAccessException("Cannot get from MediaMetadataCompat.Builder")
+    set(value) {
+        putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, value)
+    }
+
 inline var MediaMetadataCompat.Builder.downloadStatus: Long
     @Deprecated(NO_GET, level = DeprecationLevel.ERROR)
     get() = throw IllegalAccessException("Cannot get from MediaMetadataCompat.Builder")
@@ -193,22 +195,5 @@ inline var MediaMetadataCompat.Builder.flag: Int
     set(value) {
         putLong(METADATA_KEY_FLAGS, value.toLong())
     }
-
-inline val MediaMetadataCompat.fullDescription: MediaDescriptionCompat
-    get() = description.also { it.extras?.putAll(bundle) }
-
-fun MediaDescriptionCompat.toMediaSource(dataSourceFactory: DataSource.Factory, extractorsFactory: ExtractorsFactory): ProgressiveMediaSource =
-    ProgressiveMediaSource.Factory(dataSourceFactory, extractorsFactory).setTag(this).createMediaSource(mediaUri)
-
-fun MediaMetadataCompat.toMediaSource(dataSourceFactory: DataSource.Factory, extractorsFactory: ExtractorsFactory): ProgressiveMediaSource =
-    ProgressiveMediaSource.Factory(dataSourceFactory, extractorsFactory).setTag(fullDescription).createMediaSource(mediaUri)
-
-fun List<MediaMetadataCompat>.toMediaSources(dataSourceFactory: DataSource.Factory, extractorsFactory: ExtractorsFactory): List<MediaSource> {
-    val mediaSources = mutableListOf<MediaSource>()
-    forEach {
-        mediaSources.add(it.toMediaSource(dataSourceFactory, extractorsFactory))
-    }
-    return mediaSources
-}
 
 const val METADATA_KEY_FLAGS = "com.liadpaz.music.service.METADATA_KEY_FLAGS"

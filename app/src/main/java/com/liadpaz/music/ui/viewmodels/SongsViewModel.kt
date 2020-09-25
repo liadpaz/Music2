@@ -4,7 +4,6 @@ import android.support.v4.media.MediaBrowserCompat
 import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.liadpaz.music.repository.Repository
 import com.liadpaz.music.service.*
 import com.liadpaz.music.service.utils.ALL_SONGS_ROOT
 
@@ -16,9 +15,8 @@ class SongsViewModel(private val serviceConnection: ServiceConnection) : ViewMod
     fun playShuffle() =
         serviceConnection.transportControls?.playFromMediaId(ALL_SONGS_ROOT, bundleOf(EXTRA_FROM to EXTRA_FROM_ALL, EXTRA_SHUFFLE to true))
 
-    class Factory(private val serviceConnection: ServiceConnection, private val repository: Repository) : ViewModelProvider.NewInstanceFactory() {
+    class Factory(private val serviceConnection: ServiceConnection) : ViewModelProvider.NewInstanceFactory() {
         @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            SongsViewModel(serviceConnection) as T
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T = SongsViewModel(serviceConnection) as T
     }
 }

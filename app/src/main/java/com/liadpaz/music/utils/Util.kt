@@ -8,14 +8,13 @@ import android.support.v4.media.MediaDescriptionCompat
 import androidx.annotation.DrawableRes
 import androidx.core.graphics.drawable.toBitmap
 import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
-suspend fun getBitmap(glide: GlideRequests, uri: Uri, @DrawableRes errorDrawable: Int = 0, size: Int = Target.SIZE_ORIGINAL): Bitmap =
+suspend fun getBitmap(glide: GlideRequests, uri: Uri, @DrawableRes errorDrawable: Int = 0): Bitmap =
     suspendCancellableCoroutine { cont ->
-        glide.asBitmap().error(errorDrawable).override(size).load(uri).into(object : CustomTarget<Bitmap>() {
+        glide.asBitmap().error(errorDrawable).load(uri).into(object : CustomTarget<Bitmap>() {
             override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) =
                 cont.resume(resource)
 

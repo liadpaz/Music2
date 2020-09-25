@@ -13,8 +13,7 @@ import com.liadpaz.music.service.utils.PLAYLISTS_ROOT
 class PlaylistViewModel(private val serviceConnection: ServiceConnection, private val repository: Repository, private val playlist: String) : ViewModel() {
 
     private val subscriptionCallback = object : MediaBrowserCompat.SubscriptionCallback() {
-        override fun onChildrenLoaded(parentId: String, children: List<MediaBrowserCompat.MediaItem>) =
-            _songs.postValue(children)
+        override fun onChildrenLoaded(parentId: String, children: List<MediaBrowserCompat.MediaItem>) = _songs.postValue(children)
     }
 
     init {
@@ -39,11 +38,8 @@ class PlaylistViewModel(private val serviceConnection: ServiceConnection, privat
         serviceConnection.unsubscribe(playlist, subscriptionCallback)
     }
 
-    @Suppress("UNCHECKED_CAST")
     class Factory(private val serviceConnection: ServiceConnection, private val repository: Repository, private val playlist: String) : ViewModelProvider.NewInstanceFactory() {
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            PlaylistViewModel(serviceConnection, repository, playlist) as T
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T = PlaylistViewModel(serviceConnection, repository, playlist) as T
     }
 }
-
-private const val TAG = "PlaylistViewModel"

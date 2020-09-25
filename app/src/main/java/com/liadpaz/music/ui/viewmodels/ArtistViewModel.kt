@@ -6,24 +6,20 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.liadpaz.music.repository.Repository
 import com.liadpaz.music.service.*
 import com.liadpaz.music.service.utils.ARTISTS_ROOT
 
-class ArtistViewModel(private val serviceConnection: ServiceConnection, private val repository: Repository, private val artist: String) : ViewModel() {
+class ArtistViewModel(private val serviceConnection: ServiceConnection, private val artist: String) : ViewModel() {
 
     private val subscriptionCallback = object : MediaBrowserCompat.SubscriptionCallback() {
-        override fun onChildrenLoaded(parentId: String, children: MutableList<MediaBrowserCompat.MediaItem>) =
-            _songs.postValue(children)
+        override fun onChildrenLoaded(parentId: String, children: MutableList<MediaBrowserCompat.MediaItem>) = _songs.postValue(children)
     }
 
     init {
         serviceConnection.subscribe("${ARTISTS_ROOT}${artist}", subscriptionCallback)
     }
 
-    private val _songs = MutableLiveData<List<MediaBrowserCompat.MediaItem>>().apply {
-        postValue(emptyList())
-    }
+    private val _songs = MutableLiveData<List<MediaBrowserCompat.MediaItem>>()
     val songs: LiveData<List<MediaBrowserCompat.MediaItem>> = _songs
 
     fun play(mediaItem: MediaBrowserCompat.MediaItem, position: Int) =
@@ -36,9 +32,8 @@ class ArtistViewModel(private val serviceConnection: ServiceConnection, private 
         serviceConnection.unsubscribe(artist, subscriptionCallback)
     }
 
-    class Factory(private val serviceConnection: ServiceConnection, private val repository: Repository, private val artist: String) : ViewModelProvider.NewInstanceFactory() {
+    class Factory(private val serviceConnection: ServiceConnection, private val artist: String) : ViewModelProvider.NewInstanceFactory() {
         @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            ArtistViewModel(serviceConnection, repository, artist) as T
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T = ArtistViewModel(serviceConnection, artist) as T
     }
 }

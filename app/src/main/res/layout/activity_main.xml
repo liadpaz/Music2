@@ -57,9 +57,9 @@
                 android:id="@+id/bottomSheet"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                app:background="@{viewModel.mediaMetadata.palette}"
                 app:behavior_hideable="true"
                 app:behavior_peekHeight="@dimen/bottomSheetHeight"
-                app:gradientBackground="@{viewModel.mediaMetadata.palette}"
                 app:layoutDescription="@xml/activity_main_scene"
                 app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
@@ -296,7 +296,6 @@
                     android:contentDescription="@string/description_drop_down"
                     android:padding="8dp"
                     android:visibility="invisible"
-                    app:buttonColorFilter="@{viewModel.mediaMetadata.palette.dominantSwatch.bodyTextColor}"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:resource="@{R.drawable.ic_drop_down}" />
@@ -310,7 +309,6 @@
                     android:contentDescription="@string/description_more"
                     android:padding="8dp"
                     android:visibility="invisible"
-                    app:buttonColorFilter="@{viewModel.mediaMetadata.palette.dominantSwatch.bodyTextColor}"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:resource="@{R.drawable.ic_more}" />
@@ -324,7 +322,6 @@
                     android:contentDescription="@string/description_show_queue"
                     android:padding="8dp"
                     android:visibility="invisible"
-                    app:buttonColorFilter="@{viewModel.mediaMetadata.palette.dominantSwatch.bodyTextColor}"
                     app:layout_constraintEnd_toStartOf="@id/ibMore"
                     app:layout_constraintTop_toTopOf="parent"
                     app:resource="@{R.drawable.ic_queue_music}" />

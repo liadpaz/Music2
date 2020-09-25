@@ -2,6 +2,8 @@ package com.liadpaz.music.utils.extensions
 
 import android.graphics.Color
 import android.net.Uri
+import android.support.v4.media.MediaDescriptionCompat
+import android.support.v4.media.MediaMetadataCompat
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.annotation.ColorInt
@@ -19,25 +21,25 @@ fun String?.containsCaseInsensitive(other: String?) =
 
 fun String?.toUri(): Uri = this?.let { Uri.parse(it) } ?: Uri.EMPTY
 
-@ColorInt
-fun Palette.findDarkColor(): Int {
-    getDarkMutedColor(Color.BLACK).takeIf { it != Color.BLACK && isDarkColor(it) }?.let {
-        return it
-    }
-    getDarkVibrantColor(Color.BLACK).takeIf { it != Color.BLACK && isDarkColor(it) }?.let {
-        return it
-    }
-    getLightMutedColor(Color.BLACK).takeIf { it != Color.BLACK && isDarkColor(it) }?.let {
-        return it
-    }
-    getLightVibrantColor(Color.BLACK).takeIf { it != Color.BLACK && isDarkColor(it) }?.let {
-        return it
-    }
-    return Color.BLACK
+fun MediaDescriptionCompat.toMediaMetadataBuilder() = MediaMetadataCompat.Builder().also { builder ->
+    builder.id = mediaId!!
+    builder.mediaUri = mediaUri.toString()
+    builder.title = title.toString()
+    builder.displayTitle = title.toString()
+    builder.artist = subtitle.toString()
+    builder.displaySubtitle = subtitle.toString()
+    builder.album = description.toString()
+    builder.displayDescription = description.toString()
+    builder.albumArtUri = iconUri.toString()
+    builder.displayIconUri = iconUri.toString()
 }
 
-private fun isDarkColor(@ColorInt colorInt: Int): Boolean =
-    (0.2126 * Color.red(colorInt) + 0.7152 * Color.green(colorInt) + 0.0722 * Color.blue(colorInt)) > 0.5
+fun MediaDescriptionCompat.toMediaMetadata(): MediaMetadataCompat = toMediaMetadataBuilder().build()
+
+@ColorInt
+fun Palette.findColor(): Int =
+    listOf(getDarkMutedColor(Color.BLACK), getDarkVibrantColor(Color.BLACK), getLightMutedColor(Color.BLACK), getLightVibrantColor(Color.BLACK)).firstOrNull { it != Color.BLACK }
+        ?: Color.BLACK
 
 fun Int?.isNullOrZero(): Boolean = this == null || this == 0
 

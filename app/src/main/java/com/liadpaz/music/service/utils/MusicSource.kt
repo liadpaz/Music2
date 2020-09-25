@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v4.media.MediaMetadataCompat
-import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
@@ -20,13 +19,11 @@ interface MusicSource {
     fun search(query: String, extras: Bundle?): List<MediaMetadataCompat>
 }
 
-class FileMusicSource(context: Context, private val repository: Repository, private val onLoadQueue: (Int) -> Unit) : LiveData<FileMusicSource.SourceChange>(), MusicSource, Iterable<MediaMetadataCompat> {
+class FileMusicSource(context: Context, private val repository: Repository, private val onLoadQueue: (List<MediaMetadataCompat>, Int, Long) -> Unit) : LiveData<FileMusicSource.SourceChange>(), MusicSource, Iterable<MediaMetadataCompat> {
 
     val recentlyAddedName = repository.recentlyAddedName
 
-    private val dataSharedPrefs by lazy {
-        DataSharedPrefs.getInstance(context)
-    }
+    private val dataSharedPrefs by lazy { DataSharedPrefs.getInstance(context) }
 
     private val allSongProvider = SongProvider(context, folderLiveData = repository.folder)
     private val recentlyAddedProvider = SongProvider(context, folderLiveData = repository.folder, sortOrder = ORDER_LAST_ADDED)
@@ -50,8 +47,11 @@ class FileMusicSource(context: Context, private val repository: Repository, priv
     }
     private val playlistsObserver = Observer { songs: ArrayList<MediaMetadataCompat> ->
         allSongs = songs
-        queue = createQueue(dataSharedPrefs.getQueue())
-        onLoadQueue(dataSharedPrefs.getQueuePosition())
+        createQueue(dataSharedPrefs.queue, dataSharedPrefs.queuePosition).also {
+            queue = it.first
+            dataSharedPrefs.queuePosition = it.second
+            onLoadQueue(it.first, it.second, dataSharedPrefs.mediaPosition)
+        }
         postValue(SourceChange(allSongs = this.songs, recentlyAdded = recentlyAdded, playlists = createPlaylists(playlistsIds)))
     }
     private val repositoryPlaylistsObserver = Observer { playlists: MutableList<Pair<String, MutableList<Int>>>? ->
@@ -61,10 +61,16 @@ class FileMusicSource(context: Context, private val repository: Repository, priv
         }
         postValue(SourceChange(this.songs, recentlyAdded, createPlaylists(playlistsIds)))
     }
-    private val repositoryQueueObserver = Observer { queue: List<MediaSessionCompat.QueueItem> ->
-        dataSharedPrefs.setQueue(queue.map { it.description.mediaId?.toInt()!! })
+    private val repositoryQueueObserver = Observer { queue: List<MediaMetadataCompat> ->
+        dataSharedPrefs.queue = queue.map { it.description.mediaId?.toInt()!! }
     }
-    private val repositoryQueuePositionObserver = Observer(dataSharedPrefs::setQueuePosition)
+    private val repositoryQueuePositionObserver = Observer { queuePosition: Int ->
+        dataSharedPrefs.queuePosition = queuePosition
+    }
+
+    fun setMediaPosition(position: Long) {
+        dataSharedPrefs.mediaPosition = position
+    }
 
     private fun createPlaylists(playlists: MutableList<Pair<String, MutableList<Int>>>?): List<Pair<String, List<MediaMetadataCompat>>>? =
         allSongs?.let { all ->
@@ -77,12 +83,20 @@ class FileMusicSource(context: Context, private val repository: Repository, priv
             }
         }
 
-    private fun createQueue(list: List<Int>): List<MediaMetadataCompat> {
+    private fun createQueue(list: List<Int>, position: Int): Pair<List<MediaMetadataCompat>, Int> {
+        var newPosition = position
         val queue = mutableListOf<MediaMetadataCompat>()
-        list.forEach { queueItem ->
-            allSongs!!.find { it.id == queueItem.toString() }?.let { queue.add(it) }
+        list.forEachIndexed { index, queueItem ->
+            allSongs?.find { it.id == queueItem.toString() }?.let { queue.add(it) } ?: let {
+                if (index <= newPosition) {
+                    newPosition--
+                }
+            }
         }
-        return queue
+        if (queue.isEmpty()) {
+            newPosition = -1
+        }
+        return queue to newPosition
     }
 
     override fun onActive() {
@@ -105,15 +119,9 @@ class FileMusicSource(context: Context, private val repository: Repository, priv
         repository.queuePosition.removeObserver(repositoryQueuePositionObserver)
     }
 
-    /**
-     * Handles searching a [MusicSource] from a focused voice search, often coming
-     * from the Google Assistant.
-     */
     override fun search(query: String, extras: Bundle?): List<MediaMetadataCompat> {
-        // First attempt to search with the "focus" that's provided in the extras.
         val focusSearchResult = when (extras?.get(MediaStore.EXTRA_MEDIA_FOCUS)) {
             MediaStore.Audio.Artists.ENTRY_CONTENT_TYPE -> {
-                // For an Artist focused search, only the artist is set.
                 val artist = extras[MediaStore.EXTRA_MEDIA_ARTIST]
                 Log.d(TAG, "Focused artist search: '$artist'")
                 filter { song ->
@@ -121,7 +129,6 @@ class FileMusicSource(context: Context, private val repository: Repository, priv
                 }
             }
             MediaStore.Audio.Albums.ENTRY_CONTENT_TYPE -> {
-                // For an Album focused search, album and artist are set.
                 val artist = extras[MediaStore.EXTRA_MEDIA_ARTIST]
                 val album = extras[MediaStore.EXTRA_MEDIA_ALBUM]
                 Log.d(TAG, "Focused album search: album='$album' artist='$artist")
@@ -130,7 +137,6 @@ class FileMusicSource(context: Context, private val repository: Repository, priv
                 }
             }
             MediaStore.Audio.Media.ENTRY_CONTENT_TYPE -> {
-                // For a Song (aka Media) focused search, title, album, and artist are set.
                 val title = extras[MediaStore.EXTRA_MEDIA_TITLE]
                 val album = extras[MediaStore.EXTRA_MEDIA_ALBUM]
                 val artist = extras[MediaStore.EXTRA_MEDIA_ARTIST]
@@ -141,16 +147,10 @@ class FileMusicSource(context: Context, private val repository: Repository, priv
                 }
             }
             else -> {
-                // There isn't a focus, so no results yet.
                 emptyList()
             }
         }
 
-        // If there weren't any results from the focused search (or if there wasn't a focus
-        // to begin with), try to find any matches given the 'query' provided, searching against
-        // a few of the fields.
-        // In this sample, we're just checking a few fields with the provided query, but in a
-        // more complex app, more logic could be used to find fuzzy matches, etc...
         if (focusSearchResult.isEmpty()) {
             return if (query.isNotBlank()) {
                 Log.d(TAG, "Unfocused search for '$query'")
@@ -159,9 +159,6 @@ class FileMusicSource(context: Context, private val repository: Repository, priv
                             || song.artist.containsCaseInsensitive(query)
                 }
             } else {
-                // If the user asked to "play music", or something similar, the query will also
-                // be blank. Given the small catalog of songs in the sample, just return them
-                // all, shuffled, as something to play.
                 Log.d(TAG, "Unfocused search without keyword")
                 return shuffled()
             }
@@ -174,5 +171,6 @@ class FileMusicSource(context: Context, private val repository: Repository, priv
 
     data class SourceChange(val allSongs: List<MediaMetadataCompat>? = null, val recentlyAdded: List<MediaMetadataCompat>? = null, val playlists: List<Pair<String, List<MediaMetadataCompat>>>? = null)
 }
+
 
 private const val TAG = "MusicSource"

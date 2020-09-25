@@ -32,3 +32,8 @@
 -keep class com.bumptech.glide.load.data.ParcelFileDescriptorRewinder$InternalRewinder {
   *** rewind();
 }
+
+-keepclasseswithmembernames,includedescriptorclasses class com.google.android.exoplayer2.ExoPlayer* {
+    native <methods>;
+}
+-keep class com.google.android.exoplayer.** {*;}

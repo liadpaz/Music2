@@ -8,7 +8,6 @@ import android.os.Looper
 import android.os.SystemClock
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
-import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.lifecycle.*
 import androidx.palette.graphics.Palette
@@ -37,18 +36,14 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
         }
     }
 
-    private val _playbackState = MutableLiveData<PlaybackStateCompat>().apply {
-        postValue(EMPTY_PLAYBACK_STATE)
-    }
+    private val _playbackState = MutableLiveData<PlaybackStateCompat>()
     private val _mediaMetadata = MutableLiveData<NowPlayingMetadata>()
-    private val _mediaPosition = MutableLiveData<Long>().apply {
-        postValue(0L)
-    }
+    private val _mediaPosition = MutableLiveData<Long>()
 
     val playbackState: LiveData<PlaybackStateCompat> = _playbackState
     val mediaMetadata: LiveData<NowPlayingMetadata> = _mediaMetadata
     val mediaPosition: LiveData<Long> = _mediaPosition
-    val queue: LiveData<List<MediaSessionCompat.QueueItem>> = repository.queue
+    val queue: LiveData<List<MediaMetadataCompat>> = repository.queue
     val queuePosition: LiveData<Int> = repository.queuePosition
     val repeatMode: LiveData<Int> = serviceConnection.repeatMode
 
@@ -64,14 +59,14 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
     }
 
     private fun checkPlaybackPosition(): Boolean = handler.postDelayed({
-        val currPosition = _playbackState.value?.currentPlayBackPosition
-        if (_mediaPosition.value != currPosition) {
-            _mediaPosition.postValue(currPosition)
-        }
-        if (updatePosition) {
-            checkPlaybackPosition()
-        }
-    }, POSITION_UPDATE_INTERVAL_MILLIS)
+                                                                           val currPosition = _playbackState.value?.currentPlayBackPosition
+                                                                           if (_mediaPosition.value != currPosition) {
+                                                                               _mediaPosition.postValue(currPosition)
+                                                                           }
+                                                                           if (updatePosition) {
+                                                                               checkPlaybackPosition()
+                                                                           }
+                                                                       }, POSITION_UPDATE_INTERVAL_MILLIS)
 
     fun addQueueItem(item: MediaDescriptionCompat) = serviceConnection.addQueueItem(item)
 
@@ -109,16 +104,16 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
 
     private fun updateState(mediaMetadata: MediaMetadataCompat) {
         CoroutineScope(Dispatchers.IO).launch {
-            if (mediaMetadata.duration != -1L && mediaMetadata.id != null) {
-                _mediaMetadata.postValue(
-                    NowPlayingMetadata(
-                        mediaMetadata.id!!,
-                        mediaMetadata.displayIconUri,
-                        mediaMetadata.displayTitle?.trim(),
-                        mediaMetadata.displaySubtitle?.trim(),
-                        mediaMetadata.duration,
-                        Palette.from(getBitmap(GlideApp.with(getApplication() as Context), mediaMetadata.displayIconUri)).generate()
-                    )
+            if (mediaMetadata.duration > 0 && mediaMetadata.id != null) {
+                _mediaMetadata.postValue(NowPlayingMetadata(
+                    mediaMetadata.id!!,
+                    mediaMetadata.displayIconUri,
+                    mediaMetadata.displayTitle?.trim(),
+                    mediaMetadata.displaySubtitle?.trim(),
+                    mediaMetadata.duration,
+                    Palette.from(getBitmap(GlideApp.with(getApplication() as Context), mediaMetadata.displayIconUri)).addFilter { _, hsl ->
+                        (hsl[2] > 0.6 && hsl[1] < 0.6) || hsl[2] < 0.4
+                    }.generate())
                 )
             }
         }
@@ -133,10 +128,9 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
         }
     }
 
-    class Factory(private val app: Application, private val serviceConnection: ServiceConnection, private val repository: Repository) : ViewModelProvider.NewInstanceFactory() {
+    class Factory(private val app: Application, private val serviceConnection: ServiceConnection, private val repository: Repository) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            PlayingViewModel(app, serviceConnection, repository) as T
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T = PlayingViewModel(app, serviceConnection, repository) as T
     }
 }
 

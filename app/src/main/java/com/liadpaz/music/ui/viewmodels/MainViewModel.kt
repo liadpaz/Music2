@@ -15,13 +15,12 @@ import com.liadpaz.music.service.utils.PLAYLISTS_ROOT
 class MainViewModel(private val serviceConnection: ServiceConnection, private val repository: Repository) : ViewModel() {
 
     private val subscriptionCallback = object : MediaBrowserCompat.SubscriptionCallback() {
-        override fun onChildrenLoaded(parentId: String, children: MutableList<MediaBrowserCompat.MediaItem>) {
-            when (parentId) {
-                ALL_SONGS_ROOT -> _songs.postValue(children)
-                PLAYLISTS_ROOT -> _playlists.postValue(children)
-                ALBUMS_ROOT -> _albums.postValue(children)
-                ARTISTS_ROOT -> _artists.postValue(children)
-            }
+        override fun onChildrenLoaded(parentId: String, children: MutableList<MediaBrowserCompat.MediaItem>) = when (parentId) {
+            ALL_SONGS_ROOT -> _songs.postValue(children)
+            PLAYLISTS_ROOT -> _playlists.postValue(children)
+            ALBUMS_ROOT -> _albums.postValue(children)
+            ARTISTS_ROOT -> _artists.postValue(children)
+            else -> throw RuntimeException()
         }
     }
 
@@ -55,7 +54,6 @@ class MainViewModel(private val serviceConnection: ServiceConnection, private va
 
     class Factory(private val serviceConnection: ServiceConnection, private val repository: Repository) : ViewModelProvider.NewInstanceFactory() {
         @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            MainViewModel(serviceConnection, repository) as T
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T = MainViewModel(serviceConnection, repository) as T
     }
 }

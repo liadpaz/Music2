@@ -6,15 +6,13 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.liadpaz.music.repository.Repository
 import com.liadpaz.music.service.*
 import com.liadpaz.music.service.utils.ALBUMS_ROOT
 
-class AlbumViewModel(private val serviceConnection: ServiceConnection, private val repository: Repository, private val album: String) : ViewModel() {
+class AlbumViewModel(private val serviceConnection: ServiceConnection, private val album: String) : ViewModel() {
 
     private val subscriptionCallback = object : MediaBrowserCompat.SubscriptionCallback() {
-        override fun onChildrenLoaded(parentId: String, children: List<MediaBrowserCompat.MediaItem>) =
-            _songs.postValue(children)
+        override fun onChildrenLoaded(parentId: String, children: List<MediaBrowserCompat.MediaItem>) = _songs.postValue(children)
     }
 
     init {
@@ -34,9 +32,8 @@ class AlbumViewModel(private val serviceConnection: ServiceConnection, private v
         serviceConnection.unsubscribe(album, subscriptionCallback)
     }
 
-    class Factory(private val serviceConnection: ServiceConnection, private val repository: Repository, private val album: String) : ViewModelProvider.NewInstanceFactory() {
+    class Factory(private val serviceConnection: ServiceConnection, private val album: String) : ViewModelProvider.NewInstanceFactory() {
         @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            AlbumViewModel(serviceConnection, repository, album) as T
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T = AlbumViewModel(serviceConnection, album) as T
     }
 }

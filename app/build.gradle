@@ -12,13 +12,13 @@ def versionPatch = 0
 // TODO: change sdk version to 30 when finish
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
     buildToolsVersion "29.0.3"
 
     defaultConfig {
         applicationId "com.liadpaz.music"
         minSdkVersion 26
-        targetSdkVersion 29
+        targetSdkVersion 30
         versionCode versionMajor * 1000 + versionMinor * 100 + versionPatch
         versionName "$versionMajor.$versionMinor.$versionPatch"
 
@@ -77,9 +77,9 @@ dependencies {
 //    implementation 'androidx.navigation:navigation-dynamic-features-fragment:2.3.0'
 
     // exoplayer
-    implementation 'com.google.android.exoplayer:exoplayer:2.11.8'
-    implementation 'com.google.android.exoplayer:exoplayer-ui:2.11.8'
-    implementation 'com.google.android.exoplayer:extension-mediasession:2.11.8'
+    implementation 'com.google.android.exoplayer:exoplayer:2.12.0'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.12.0'
+    implementation 'com.google.android.exoplayer:extension-mediasession:2.12.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
     // glide for loading bitmaps efficiently
