@@ -5,27 +5,13 @@ import android.support.v4.media.MediaMetadataCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.liadpaz.music.R
-import com.liadpaz.music.utils.contentprovider.SongProvider
 
 class Repository private constructor(context: Context) {
 
     val recentlyAddedName = context.getString(R.string.playlist_recently_added)
 
-    private val _granted = MutableLiveData<Boolean>().apply {
-        postValue(false)
-    }
-    val granted: LiveData<Boolean> = _granted
-
-    private val _folder = MutableLiveData<String>().apply {
-        postValue(SongProvider.FOLDER_DEFAULT)
-    }
-    val folder: LiveData<String> = _folder
-
     private val _queue = MutableLiveData<List<MediaMetadataCompat>>()
     val queue: LiveData<List<MediaMetadataCompat>> = _queue
-
-    private val _mediaPosition = MutableLiveData<Int>()
-    val mediaPosition: LiveData<Int> = _mediaPosition
 
     private val _queuePosition = MutableLiveData<Int>()
     val queuePosition: LiveData<Int> = _queuePosition
@@ -45,9 +31,8 @@ class Repository private constructor(context: Context) {
      */
     fun createNewPlaylist(name: String, songs: IntArray) {
         val playlists = _playlists.value ?: mutableListOf()
-        if (playlists.find { pair -> pair.first == name } == null) {
-            _playlists.postValue(playlists.apply { add(0, Pair(name, songs.toMutableList())) })
-        }
+        playlists.removeIf { pair -> pair.first == name }
+        _playlists.postValue(playlists.apply { add(0, Pair(name, songs.toMutableList())) })
     }
 
     /**
@@ -121,8 +106,6 @@ class Repository private constructor(context: Context) {
     }
 
     fun setPlaylists(playlists: MutableList<Pair<String, MutableList<Int>>>) = _playlists.postValue(playlists)
-
-    fun setPermissionGranted(granted: Boolean) = _granted.postValue(granted)
 
     companion object {
         @Volatile

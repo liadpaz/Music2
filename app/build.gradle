@@ -9,8 +9,6 @@ def versionMajor = 1
 def versionMinor = 0
 def versionPatch = 0
 
-// TODO: change sdk version to 30 when finish
-
 android {
     compileSdkVersion 30
     buildToolsVersion "29.0.3"
@@ -84,8 +82,10 @@ dependencies {
 
     // glide for loading bitmaps efficiently
     implementation 'com.github.bumptech.glide:glide:4.11.0'
-    implementation 'androidx.palette:palette-ktx:1.0.0'
     kapt 'com.github.bumptech.glide:compiler:4.11.0'
+
+    implementation 'androidx.palette:palette-ktx:1.0.0'
+    implementation 'androidx.preference:preference:1.1.1'
 
     // gson for json serialization
     implementation 'com.google.code.gson:gson:2.8.6'

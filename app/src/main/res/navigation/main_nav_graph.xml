@@ -64,6 +64,9 @@
         <action
             android:id="@+id/action_mainFragment_to_goToArtistDialog"
             app:destination="@id/goToArtistDialog" />
+        <action
+            android:id="@+id/action_mainFragment_to_settingsActivity"
+            app:destination="@id/settingsActivity" />
     </fragment>
     <fragment
         android:id="@+id/playlistFragment"
@@ -128,4 +131,8 @@
             android:name="song"
             app:argType="android.support.v4.media.MediaBrowserCompat$MediaItem" />
     </dialog>
+    <activity
+        android:id="@+id/settingsActivity"
+        android:name="com.liadpaz.music.ui.SettingsActivity"
+        android:label="SettingsActivity" />
 </navigation>

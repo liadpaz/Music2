@@ -2,6 +2,7 @@ package com.liadpaz.music.utils
 
 import android.app.Application
 import android.content.Context
+import com.liadpaz.music.repository.PreferencesRepository
 import com.liadpaz.music.repository.Repository
 import com.liadpaz.music.service.ServiceConnection
 import com.liadpaz.music.ui.viewmodels.*
@@ -9,7 +10,7 @@ import com.liadpaz.music.ui.viewmodels.*
 object InjectorUtils {
 
     fun provideMainViewModelFactory(context: Context) =
-        MainViewModel.Factory(ServiceConnection.getInstance(context), Repository.getInstance(context))
+        MainViewModel.Factory(ServiceConnection.getInstance(context), PreferencesRepository.getInstance(context))
 
     fun provideSongsViewModelFactory(context: Context) =
         SongsViewModel.Factory(ServiceConnection.getInstance(context))
@@ -31,4 +32,7 @@ object InjectorUtils {
 
     fun provideExtendedSongViewModelFactory(context: Context) =
         ExtendedSongViewModel.Factory(Repository.getInstance(context))
+
+    fun provideSettingsViewModelFactory(context: Context) =
+        SettingsViewModel.Factory(PreferencesRepository.getInstance(context))
 }

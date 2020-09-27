@@ -39,4 +39,16 @@
     <string name="dialog_select_artist">בחר אומן</string>
     <string name="menu_remove_from_playlist">הסר מהפלייליסט</string>
     <string name="item_no_songs">לא נמצאו שירים בתיקיה\\פלייליסט הנוכחית. ניתן להחליף תיקייה בפינה השמאלית למעלה של המסך.</string>
+    <string name="title_settings">הגדרות</string>
+    <string name="preference_category_folder">תיקיה</string>
+    <string name="preference_reset_folder">תיקיית ברירת מחדל</string>
+    <string name="preference_folder">שינוי תיקיה</string>
+    <string name="preference_reset_folder_summary">איפוס התיקיה לברירת מחדל (Music).</string>
+    <string name="folder_all">כל המדיה</string>
+    <string name="preference_category_general">הגדרות כלליות</string>
+    <string name="preference_stop_on_task">עצירת שמע בהעפת המשימה.</string>
+    <string name="preference_stop_on_task_summary_on">שמע יפסיק להתנגן בהעפת המשימה.</string>
+    <string name="preference_stop_on_task_summary_off">שמע ימשיך להתנגן בהעפת המשימה.</string>
+    <string name="preference_category_display">הגדרות תצוגה</string>
+    <string name="preference_display">השאר את המסך דלוק כאשר מסך השיר המתנגן למעלה.</string>
 </resources>

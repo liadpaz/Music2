@@ -5,14 +5,14 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.liadpaz.music.repository.Repository
+import com.liadpaz.music.repository.PreferencesRepository
 import com.liadpaz.music.service.ServiceConnection
 import com.liadpaz.music.service.utils.ALBUMS_ROOT
 import com.liadpaz.music.service.utils.ALL_SONGS_ROOT
 import com.liadpaz.music.service.utils.ARTISTS_ROOT
 import com.liadpaz.music.service.utils.PLAYLISTS_ROOT
 
-class MainViewModel(private val serviceConnection: ServiceConnection, private val repository: Repository) : ViewModel() {
+class MainViewModel(private val serviceConnection: ServiceConnection, private val repository: PreferencesRepository) : ViewModel() {
 
     private val subscriptionCallback = object : MediaBrowserCompat.SubscriptionCallback() {
         override fun onChildrenLoaded(parentId: String, children: MutableList<MediaBrowserCompat.MediaItem>) = when (parentId) {
@@ -52,7 +52,7 @@ class MainViewModel(private val serviceConnection: ServiceConnection, private va
         serviceConnection.unsubscribe(ARTISTS_ROOT, subscriptionCallback)
     }
 
-    class Factory(private val serviceConnection: ServiceConnection, private val repository: Repository) : ViewModelProvider.NewInstanceFactory() {
+    class Factory(private val serviceConnection: ServiceConnection, private val repository: PreferencesRepository) : ViewModelProvider.NewInstanceFactory() {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel?> create(modelClass: Class<T>): T = MainViewModel(serviceConnection, repository) as T
     }

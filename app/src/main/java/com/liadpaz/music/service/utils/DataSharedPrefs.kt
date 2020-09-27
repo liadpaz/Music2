@@ -2,11 +2,10 @@ package com.liadpaz.music.service.utils
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.annotation.WorkerThread
+import androidx.preference.PreferenceManager
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
-@WorkerThread
 class DataSharedPrefs private constructor(private val generalPrefs: SharedPreferences, private val playlistsPrefs: SharedPreferences) {
 
     fun getPlaylists(): MutableList<Pair<String, MutableList<Int>>> = playlistsPrefs.all.map { (name, songs) ->
@@ -37,8 +36,7 @@ class DataSharedPrefs private constructor(private val generalPrefs: SharedPrefer
     private fun getPlaylistsOrder(): List<String> =
         Gson().fromJson(generalPrefs.getString(KEY_PLAYLISTS, "[]"), object : TypeToken<List<String>>() {}.type)
 
-    private fun setPlaylistsOrder(order: List<String>?) =
-        generalPrefs.edit().putString(KEY_PLAYLISTS, Gson().toJson(order)).apply()
+    private fun setPlaylistsOrder(order: List<String>?) = generalPrefs.edit().putString(KEY_PLAYLISTS, Gson().toJson(order)).apply()
 
     companion object {
         @Volatile
@@ -46,17 +44,14 @@ class DataSharedPrefs private constructor(private val generalPrefs: SharedPrefer
 
         fun getInstance(context: Context) = instance ?: synchronized(this) {
             instance
-                ?: DataSharedPrefs(context.getSharedPreferences(SHARED_PREFS_GENERAL_NAME, 0), context.getSharedPreferences(SHARED_PREFS_PLAYLISTS_NAME, 0)).also { instance = it }
+                ?: DataSharedPrefs(PreferenceManager.getDefaultSharedPreferences(context), context.getSharedPreferences(getPlaylistsName(context), 0)).also { instance = it }
         }
+
+        private fun getPlaylistsName(context: Context) = "${context.packageName}_playlists"
     }
 }
-
-const val SHARED_PREFS_GENERAL_NAME = "name" // TODO: get real name
-const val SHARED_PREFS_PLAYLISTS_NAME = "com.liadpaz.music.playlists"
 
 const val KEY_QUEUE = "key_queue"
 const val KEY_POSITION = "key_position"
 const val KEY_MEDIA_POSITION = "key_media_position"
 const val KEY_PLAYLISTS = "key_playlists"
-
-private const val TAG = "DataSharedPrefs"

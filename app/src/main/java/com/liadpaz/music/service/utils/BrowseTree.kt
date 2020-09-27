@@ -36,8 +36,6 @@ class BrowseTree(private val musicSource: FileMusicSource, private val onUpdate:
         get() = _albums
     val artists: Map<MediaMetadataCompat, List<MediaMetadataCompat>>
         get() = _artists
-    val queue: List<MediaMetadataCompat>?
-        get() = musicSource.queue
 
     private val recentlyAddedMetadata: MediaMetadataCompat = buildRecentlyAddedMetadata()
 
@@ -249,14 +247,13 @@ private infix fun List<MediaMetadataCompat>?.equals(other: List<MediaMetadataCom
 }
 
 private infix fun MediaMetadataCompat.equals(other: MediaMetadataCompat): Boolean =
-    this.id == other.id && this.displayTitle == other.displayTitle && this.displaySubtitle == other.displayTitle && this.displayDescription == other.displayDescription && this.displayIconUri == other.displayIconUri
+    id == other.id && displayTitle == other.displayTitle && displaySubtitle == other.displayTitle && displayDescription == other.displayDescription && displayIconUri == other.displayIconUri
 
 const val ROOT = "/"
 const val ALL_SONGS_ROOT = "_ALL_SONGS_"
 const val PLAYLISTS_ROOT = "_PLAYLISTS_"
 const val ALBUMS_ROOT = "_ALBUMS_"
 const val ARTISTS_ROOT = "_ARTISTS_"
-const val QUEUE_ROOT = "_QUEUE_"
 
 const val EXTRA_SONGS_NUM = "songs_num"
 

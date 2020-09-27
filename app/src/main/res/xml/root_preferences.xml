@@ -1,0 +1,29 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory app:title="@string/preference_category_general">
+        <SwitchPreferenceCompat
+            app:key="key_stop_task"
+            app:singleLineTitle="false"
+            app:summaryOff="@string/preference_stop_on_task_summary_off"
+            app:summaryOn="@string/preference_stop_on_task_summary_on"
+            app:title="@string/preference_stop_on_task" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/preference_category_folder">
+        <Preference
+            app:key="key_reset_folder"
+            app:summary="@string/preference_reset_folder_summary"
+            app:title="@string/preference_reset_folder" />
+
+        <Preference
+            app:key="key_folder"
+            app:title="@string/preference_folder" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/preference_category_display">
+        <SwitchPreferenceCompat
+            app:key="key_display"
+            app:singleLineTitle="false"
+            app:title="@string/preference_display" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

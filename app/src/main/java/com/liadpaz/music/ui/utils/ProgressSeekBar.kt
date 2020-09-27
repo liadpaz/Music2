@@ -16,23 +16,25 @@ class ProgressSeekBar(context: Context, attr: AttributeSet? = null) : AppCompatS
 
         override fun onStartTrackingTouch(seekBar: SeekBar) {
             onSeekBar?.onStartTrackingTouch(seekBar)
-            fromUser = false
+            fromUser = true
         }
 
         override fun onStopTrackingTouch(seekBar: SeekBar) {
             onSeekBar?.onStopTrackingTouch(seekBar)
-            fromUser = true
+            fromUser = false
         }
     }
 
     override fun setProgress(progress: Int) {
-        if (fromUser) {
+        if (!fromUser) {
             super.setProgress(progress)
         }
     }
 
-    override fun setOnSeekBarChangeListener(l: OnSeekBarChangeListener?) {
-        onSeekBar = l
+    override fun setOnSeekBarChangeListener(listener: OnSeekBarChangeListener?) {
+        onSeekBar = listener
         super.setOnSeekBarChangeListener(originalOnSeekListener)
     }
+
+
 }

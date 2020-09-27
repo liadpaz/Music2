@@ -7,6 +7,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
+import com.liadpaz.music.repository.PreferencesRepository
 import com.liadpaz.music.repository.Repository
 import com.liadpaz.music.utils.contentprovider.ORDER_LAST_ADDED
 import com.liadpaz.music.utils.contentprovider.SongProvider
@@ -19,14 +20,16 @@ interface MusicSource {
     fun search(query: String, extras: Bundle?): List<MediaMetadataCompat>
 }
 
-class FileMusicSource(context: Context, private val repository: Repository, private val onLoadQueue: (List<MediaMetadataCompat>, Int, Long) -> Unit) : LiveData<FileMusicSource.SourceChange>(), MusicSource, Iterable<MediaMetadataCompat> {
+class FileMusicSource(context: Context, onLoadQueue: (List<MediaMetadataCompat>, Int, Long) -> Unit) : LiveData<FileMusicSource.SourceChange>(), MusicSource, Iterable<MediaMetadataCompat> {
+    private val repository = Repository.getInstance(context)
+    private val preferencesRepository = PreferencesRepository.getInstance(context)
 
     val recentlyAddedName = repository.recentlyAddedName
 
     private val dataSharedPrefs by lazy { DataSharedPrefs.getInstance(context) }
 
-    private val allSongProvider = SongProvider(context, folderLiveData = repository.folder)
-    private val recentlyAddedProvider = SongProvider(context, folderLiveData = repository.folder, sortOrder = ORDER_LAST_ADDED)
+    private val allSongProvider = SongProvider(context, folderLiveData = preferencesRepository.folder)
+    private val recentlyAddedProvider = SongProvider(context, folderLiveData = preferencesRepository.folder, sortOrder = ORDER_LAST_ADDED)
     private val playlistsProvider = SongProvider(context)
 
     private var songs: List<MediaMetadataCompat>? = null
@@ -34,8 +37,17 @@ class FileMusicSource(context: Context, private val repository: Repository, priv
     private var allSongs: List<MediaMetadataCompat>? = null
     private var playlistsIds: MutableList<Pair<String, MutableList<Int>>>? = null
 
-    var queue: List<MediaMetadataCompat>? = null
-        private set
+    init {
+        playlistsProvider.observeForever(object : Observer<ArrayList<MediaMetadataCompat>?> {
+            override fun onChanged(allSongs: ArrayList<MediaMetadataCompat>?) {
+                createQueue(allSongs, dataSharedPrefs.queue, dataSharedPrefs.queuePosition)?.also {
+                    dataSharedPrefs.queuePosition = it.second
+                    onLoadQueue(it.first, it.second, dataSharedPrefs.mediaPosition)
+                }
+                playlistsProvider.removeObserver(this)
+            }
+        })
+    }
 
     private val allSongsObserver = Observer { songs: ArrayList<MediaMetadataCompat>? ->
         this.songs = songs
@@ -47,11 +59,6 @@ class FileMusicSource(context: Context, private val repository: Repository, priv
     }
     private val playlistsObserver = Observer { songs: ArrayList<MediaMetadataCompat> ->
         allSongs = songs
-        createQueue(dataSharedPrefs.queue, dataSharedPrefs.queuePosition).also {
-            queue = it.first
-            dataSharedPrefs.queuePosition = it.second
-            onLoadQueue(it.first, it.second, dataSharedPrefs.mediaPosition)
-        }
         postValue(SourceChange(allSongs = this.songs, recentlyAdded = recentlyAdded, playlists = createPlaylists(playlistsIds)))
     }
     private val repositoryPlaylistsObserver = Observer { playlists: MutableList<Pair<String, MutableList<Int>>>? ->
@@ -83,21 +90,27 @@ class FileMusicSource(context: Context, private val repository: Repository, priv
             }
         }
 
-    private fun createQueue(list: List<Int>, position: Int): Pair<List<MediaMetadataCompat>, Int> {
-        var newPosition = position
-        val queue = mutableListOf<MediaMetadataCompat>()
-        list.forEachIndexed { index, queueItem ->
-            allSongs?.find { it.id == queueItem.toString() }?.let { queue.add(it) } ?: let {
-                if (index <= newPosition) {
-                    newPosition--
+    private fun createQueue(allSongs: ArrayList<MediaMetadataCompat>?, queueIds: List<Int>, position: Int): Pair<List<MediaMetadataCompat>, Int>? =
+        allSongs?.let { all ->
+            var newPosition = position
+            val queue = mutableListOf<MediaMetadataCompat>()
+            Log.d(TAG, "createQueue: ${queueIds.size} ${all.size}")
+            queueIds.forEachIndexed { index, queueItem ->
+                all.find {
+                    it.id == queueItem.toString()
+                }?.let { queue.add(it) } ?: let {
+                    if (index <= newPosition) {
+                        newPosition--
+                    }
                 }
             }
+            Log.d(TAG, "createQueue: ${queue.map { it.id }}")
+            return@let if (queue.isEmpty()) {
+                emptyList<MediaMetadataCompat>() to -1
+            } else {
+                queue to newPosition
+            }
         }
-        if (queue.isEmpty()) {
-            newPosition = -1
-        }
-        return queue to newPosition
-    }
 
     override fun onActive() {
         allSongProvider.observeForever(allSongsObserver)

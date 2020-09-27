@@ -13,7 +13,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
-import androidx.lifecycle.Observer
 import androidx.media.MediaBrowserServiceCompat
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.analytics.AnalyticsCollector
@@ -21,10 +20,12 @@ import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.audio.MediaCodecAudioRenderer
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.mediacodec.MediaCodecSelector
+import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.util.Clock
+import com.liadpaz.music.repository.PreferencesRepository
 import com.liadpaz.music.repository.Repository
 import com.liadpaz.music.service.utils.*
 import com.liadpaz.music.service.utils.ControlDispatcher
@@ -51,37 +52,26 @@ class MusicService : MediaBrowserServiceCompat() {
 
     private var isForegroundService: Boolean = false
 
-    private val mAudioAttributes = AudioAttributes.Builder().setContentType(C.CONTENT_TYPE_MUSIC).setUsage(C.USAGE_MEDIA).build()
-
     private val playerListener = PlayerListener()
 
     private val player: SimpleExoPlayer by lazy {
-        val audioRenderer = RenderersFactory { eventHandler, _, audioRendererEventListener, _, _ ->
+        SimpleExoPlayer.Builder(applicationContext, { eventHandler, _, audioRendererEventListener, _, _ ->
             arrayOf(MediaCodecAudioRenderer(this, MediaCodecSelector.DEFAULT, eventHandler, audioRendererEventListener))
-        }
-        SimpleExoPlayer.Builder(applicationContext, audioRenderer, DefaultTrackSelector(applicationContext), AudioMediaSourceFactory(applicationContext), DefaultLoadControl(), DefaultBandwidthMeter.getSingletonInstance(this), AnalyticsCollector(Clock.DEFAULT)).build().apply {
-            setAudioAttributes(mAudioAttributes, true)
+        }, DefaultTrackSelector(DefaultTrackSelector.Parameters.DEFAULT_WITHOUT_CONTEXT, AdaptiveTrackSelection.Factory()), AudioMediaSourceFactory(applicationContext), DefaultLoadControl(), DefaultBandwidthMeter.getSingletonInstance(this), AnalyticsCollector(Clock.DEFAULT)).build().apply {
+            setAudioAttributes(AudioAttributes.Builder().setContentType(C.CONTENT_TYPE_MUSIC).setUsage(C.USAGE_MEDIA).build(), true)
             setHandleAudioBecomingNoisy(true)
             addListener(playerListener)
             repeatMode = ExoPlayer.REPEAT_MODE_ALL
         }
     }
 
-    private var permissionGranted = false
-    private val permissionGrantedObserver = Observer<Boolean> {
-        if (it && permissionGranted != it) {
-            permissionGranted = it
-        }
-    }
-
     private val repository by lazy { Repository.getInstance(this) }
+    private val preferencesRepository by lazy { PreferencesRepository.getInstance(this) }
 
     override fun onCreate() {
         super.onCreate()
-
-        repository.granted.observeForever(permissionGrantedObserver)
-
-        musicSource = FileMusicSource(this, repository) { queue, queuePosition, mediaPosition ->
+        musicSource = FileMusicSource(this) { queue, queuePosition, mediaPosition ->
+            Log.d(TAG, "onCreate: ${queue.map { it.id }} $queuePosition")
             if (queuePosition != -1) {
                 player.setMediaItems(queue.map { MediaItem.Builder().setUri(it.mediaUri).setMediaId(it.id).setTag(it.description).build() }, queuePosition, mediaPosition)
                 player.prepare()
@@ -115,10 +105,9 @@ class MusicService : MediaBrowserServiceCompat() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        // TODO: add check if user wants to stop playback
-        /*if (toStop) {*/
-        player.stop(true)
-        /*}*/
+        if (preferencesRepository.stopTask.value == true) {
+            player.stop(true)
+        }
     }
 
     override fun onDestroy() {
@@ -126,8 +115,6 @@ class MusicService : MediaBrowserServiceCompat() {
             isActive = false
             release()
         }
-
-        repository.granted.removeObserver(permissionGrantedObserver)
 
         Log.d(TAG, "onDestroy: ")
 
@@ -148,6 +135,10 @@ class MusicService : MediaBrowserServiceCompat() {
         result.sendResult(browseTree.search(query, extras).map { item -> MediaBrowserCompat.MediaItem(item.description, item.flag) })
     }
 
+    /**
+     * This class is listening to [PlayerNotificationManager] notification events, and it sets the service as a foreground service if needed to keep
+     * the service alive while the app is background.
+     */
     private inner class PlayerNotificationListener : PlayerNotificationManager.NotificationListener {
         override fun onNotificationPosted(notificationId: Int, notification: Notification, ongoing: Boolean) {
             if (ongoing && !isForegroundService) {
@@ -163,6 +154,10 @@ class MusicService : MediaBrowserServiceCompat() {
         }
     }
 
+    /**
+     * This class listens to [ExoPlayer] events such as [onPlaybackStateChanged], [onPlayWhenReadyChanged], [onMediaItemTransition],
+     * [onTimelineChanged] and [onPlayerError].
+     */
     private inner class PlayerListener : Player.EventListener {
         override fun onPlaybackStateChanged(@Player.State state: Int) = onPlayerPlaybackStateChange(state, player.playWhenReady)
 

@@ -39,4 +39,17 @@
     <string name="dialog_select_artist">Select Artist</string>
     <string name="menu_remove_from_playlist">Remove from playlist</string>
     <string name="item_no_songs">No songs has been found in this folder/playlist. You can change the folder from the settings in the top right corner of the screen.</string>
+    <string name="title_settings">Settings</string>
+    <string name="preference_category_folder">Folder</string>
+    <string name="preference_reset_folder">Default Folder</string>
+    <string name="preference_folder">Change Folder</string>
+    <string name="preference_reset_folder_summary">Reset the folder to the default one (Music).</string>
+    <string name="folder_all">All Media</string>
+    <string name="preference_category_general">General Settings</string>
+    <string name="preference_stop_on_task">Stop playback when dismissing task.</string>
+    <string name="preference_stop_on_task_summary_on">Playback will be stopped when dismissing task.</string>
+    <string name="preference_stop_on_task_summary_off">Playback will continue to play when dismissing task.</string>
+    <string name="preference_category_display">Display Settings</string>
+    <string name="preference_display">Keep screen on when currently playing screen is up.</string>
+
 </resources>

@@ -52,21 +52,25 @@ class ControlDispatcher : ControlDispatcher {
 
     override fun dispatchPrevious(player: Player): Boolean = let {
         val timeline = player.currentTimeline
-        timeline.getWindow(player.currentWindowIndex, window)
-        val previousWindowIndex = player.previousWindowIndex
-        if (previousWindowIndex != C.INDEX_UNSET && player.currentPosition <= 3000) {
-            player.seekTo(previousWindowIndex, C.TIME_UNSET)
-        } else if (previousWindowIndex != C.INDEX_UNSET && player.currentPosition > 3000) {
-            player.seekTo(player.currentWindowIndex, 0)
-        } else {
-            player.seekTo(timeline.windowCount - 1, C.TIME_UNSET)
+        if (player.mediaItemCount != 0) {
+            timeline.getWindow(player.currentWindowIndex, window)
+            val previousWindowIndex = player.previousWindowIndex
+            if (previousWindowIndex != C.INDEX_UNSET && player.currentPosition <= 3000) {
+                player.seekTo(previousWindowIndex, C.TIME_UNSET)
+            } else if (previousWindowIndex != C.INDEX_UNSET && player.currentPosition > 3000) {
+                player.seekTo(player.currentWindowIndex, 0)
+            } else {
+                player.seekTo(timeline.windowCount - 1, C.TIME_UNSET)
+            }
         }
         true
     }
 
     override fun dispatchNext(player: Player): Boolean = let {
         val nextWindowIndex = player.nextWindowIndex
-        player.seekTo(if (nextWindowIndex != C.INDEX_UNSET) nextWindowIndex else 0, C.TIME_UNSET)
+        if (player.mediaItemCount != 0) {
+            player.seekTo(if (nextWindowIndex != C.INDEX_UNSET) nextWindowIndex else 0, C.TIME_UNSET)
+        }
         true
     }
 
