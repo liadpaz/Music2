@@ -8,7 +8,7 @@ import com.liadpaz.music.databinding.ItemAlbumBinding
 import com.liadpaz.music.utils.C
 import com.liadpaz.music.utils.extensions.layoutInflater
 
-class AlbumsAdapter(private val onItemClick: (MediaBrowserCompat.MediaItem) -> Unit) : ListAdapter<MediaBrowserCompat.MediaItem, AlbumsAdapter.AlbumViewHolder>(C.diffCallback) {
+class AlbumsAdapter(private val onItemClick: (MediaBrowserCompat.MediaItem) -> Unit) : ListAdapter<MediaBrowserCompat.MediaItem, AlbumsAdapter.AlbumViewHolder>(C.mediaItemDiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AlbumViewHolder = AlbumViewHolder.create(parent, onItemClick)
 

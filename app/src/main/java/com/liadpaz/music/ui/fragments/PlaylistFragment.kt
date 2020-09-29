@@ -71,7 +71,6 @@ class PlaylistFragment : Fragment() {
             }
 
             override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
-                super.clearView(recyclerView, viewHolder)
                 val typedArray = requireActivity().theme.obtainStyledAttributes(R.style.AppTheme, intArrayOf(R.attr.selectableItemBackground))
                 val backgroundId = typedArray.getResourceIdOrThrow(0)
                 typedArray.recycle()

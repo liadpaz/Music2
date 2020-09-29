@@ -24,6 +24,8 @@ class MainViewModel(private val serviceConnection: ServiceConnection, private va
         }
     }
 
+    val displayOn = repository.displayOn
+
     private val _songs = MutableLiveData<List<MediaBrowserCompat.MediaItem>>()
     val songs: LiveData<List<MediaBrowserCompat.MediaItem>> = _songs
     private val _playlists = MutableLiveData<List<MediaBrowserCompat.MediaItem>>()
@@ -39,7 +41,6 @@ class MainViewModel(private val serviceConnection: ServiceConnection, private va
         serviceConnection.subscribe(ALBUMS_ROOT, subscriptionCallback)
         serviceConnection.subscribe(ARTISTS_ROOT, subscriptionCallback)
     }
-
 
     fun onPermissionGranted() {
         repository.setPermissionGranted(true)

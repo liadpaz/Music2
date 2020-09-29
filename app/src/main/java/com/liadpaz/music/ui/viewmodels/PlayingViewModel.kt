@@ -24,89 +24,98 @@ import kotlin.math.floor
 
 class PlayingViewModel(app: Application, private val serviceConnection: ServiceConnection, repository: Repository) : AndroidViewModel(app) {
 
-    data class NowPlayingMetadata(val id: String, val albumArtUri: Uri, val title: String?, val artist: String?, val duration: Long, val palette: Palette) {
+	data class NowPlayingMetadata(val id: String?, val albumArtUri: Uri, val title: String?, val artist: String?, val duration: Long, val palette: Palette) {
+		companion object {
+			fun timestampToMSS(position: Long): String {
+				val totalSeconds = floor(position / 1E3).toInt()
+				val minutes = totalSeconds / 60
+				val remainingSeconds = totalSeconds - (minutes * 60)
+				return "%d:%02d".format(minutes, remainingSeconds)
+			}
+		}
+	}
 
-        companion object {
-            fun timestampToMSS(position: Long): String {
-                val totalSeconds = floor(position / 1E3).toInt()
-                val minutes = totalSeconds / 60
-                val remainingSeconds = totalSeconds - (minutes * 60)
-                return "%d:%02d".format(minutes, remainingSeconds)
-            }
+	private val _playbackState = MutableLiveData<PlaybackStateCompat>()
+	private val _mediaMetadata = MutableLiveData<NowPlayingMetadata>()
+	private val _mediaPosition = MutableLiveData<Long>()
+	private val _queuePair = MutableLiveData<Pair<List<MediaMetadataCompat>, Int>>()
+
+
+	val playbackState: LiveData<PlaybackStateCompat> = _playbackState
+	val mediaMetadata: LiveData<NowPlayingMetadata> = _mediaMetadata
+	val mediaPosition: LiveData<Long> = _mediaPosition
+	val queue: LiveData<List<MediaMetadataCompat>> = repository.queue
+	val queuePosition: LiveData<Int> = repository.queuePosition
+	val repeatMode: LiveData<Int> = serviceConnection.repeatMode
+	val queuePair: LiveData<Pair<List<MediaMetadataCompat>, Int>> =_queuePair
+
+	private var updatePosition = true
+	private val handler = Handler(Looper.getMainLooper())
+
+	private val playbackStateObserver = Observer<PlaybackStateCompat> {
+		_playbackState.postValue(it ?: EMPTY_PLAYBACK_STATE)
+	}
+
+	private val mediaMetadataObserver = Observer<MediaMetadataCompat> {
+		updateState(it)
+	}
+
+	private val queueObserver = Observer<List<MediaMetadataCompat>> {
+		_queuePair.postValue(it to queuePosition.value!!)
+	}
+
+	private fun checkPlaybackPosition(): Boolean = handler.postDelayed({
+        val currPosition = _playbackState.value?.currentPlayBackPosition
+        if (_mediaPosition.value != currPosition) {
+            _mediaPosition.postValue(currPosition)
         }
-    }
+        if (updatePosition) {
+            checkPlaybackPosition()
+        }
+    }, POSITION_UPDATE_INTERVAL_MILLIS)
 
-    private val _playbackState = MutableLiveData<PlaybackStateCompat>()
-    private val _mediaMetadata = MutableLiveData<NowPlayingMetadata>()
-    private val _mediaPosition = MutableLiveData<Long>()
+	fun addQueueItem(item: MediaDescriptionCompat) = serviceConnection.addQueueItem(item)
 
-    val playbackState: LiveData<PlaybackStateCompat> = _playbackState
-    val mediaMetadata: LiveData<NowPlayingMetadata> = _mediaMetadata
-    val mediaPosition: LiveData<Long> = _mediaPosition
-    val queue: LiveData<List<MediaMetadataCompat>> = repository.queue
-    val queuePosition: LiveData<Int> = repository.queuePosition
-    val repeatMode: LiveData<Int> = serviceConnection.repeatMode
+	fun addNextQueueItem(item: MediaDescriptionCompat) = serviceConnection.addQueueItem(item, queuePosition.value!! + 1)
 
-    private var updatePosition = true
-    private val handler = Handler(Looper.getMainLooper())
+	fun moveQueueItem(fromPosition: Int, toPosition: Int) = serviceConnection.moveQueueItem(fromPosition, toPosition)
 
-    private val playbackStateObserver = Observer<PlaybackStateCompat> {
-        _playbackState.postValue(it ?: EMPTY_PLAYBACK_STATE)
-    }
+	fun removeQueueItem(position: Int) = serviceConnection.removeQueueItemAt(position)
 
-    private val mediaMetadataObserver = Observer<MediaMetadataCompat> {
-        updateState(it)
-    }
+	fun skipToQueueItem(position: Int) = serviceConnection.transportControls?.skipToQueueItem(position.toLong())
 
-    private fun checkPlaybackPosition(): Boolean = handler.postDelayed({
-                                                                           val currPosition = _playbackState.value?.currentPlayBackPosition
-                                                                           if (_mediaPosition.value != currPosition) {
-                                                                               _mediaPosition.postValue(currPosition)
-                                                                           }
-                                                                           if (updatePosition) {
-                                                                               checkPlaybackPosition()
-                                                                           }
-                                                                       }, POSITION_UPDATE_INTERVAL_MILLIS)
+	fun toggleRepeatMode() =
+		serviceConnection.transportControls?.setRepeatMode(if (serviceConnection.repeatMode.value == PlaybackStateCompat.REPEAT_MODE_ALL) PlaybackStateCompat.REPEAT_MODE_ONE else PlaybackStateCompat.REPEAT_MODE_ALL)
 
-    fun addQueueItem(item: MediaDescriptionCompat) = serviceConnection.addQueueItem(item)
+	fun skipToPrev() = serviceConnection.transportControls?.skipToPrevious()
 
-    fun addNextQueueItem(item: MediaDescriptionCompat) = serviceConnection.addQueueItem(item, queuePosition.value!! + 1)
+	fun skipToNext() = serviceConnection.transportControls?.skipToNext()
 
-    fun moveQueueItem(fromPosition: Int, toPosition: Int) = serviceConnection.moveQueueItem(fromPosition, toPosition)
+	fun stop() = serviceConnection.transportControls?.stop()
 
-    fun removeQueueItem(position: Int) = serviceConnection.removeQueueItemAt(position)
+	fun seekTo(position: Long) = serviceConnection.transportControls?.seekTo(position)
 
-    fun skipToQueueItem(position: Int) = serviceConnection.transportControls?.skipToQueueItem(position.toLong())
+	init {
+		serviceConnection.playbackState.observeForever(playbackStateObserver)
+		serviceConnection.nowPlaying.observeForever(mediaMetadataObserver)
+		queue.observeForever(queueObserver)
 
-    fun toggleRepeatMode() =
-        serviceConnection.transportControls?.setRepeatMode(if (serviceConnection.repeatMode.value == PlaybackStateCompat.REPEAT_MODE_ALL) PlaybackStateCompat.REPEAT_MODE_ONE else PlaybackStateCompat.REPEAT_MODE_ALL)
+		checkPlaybackPosition()
+	}
 
-    fun skipToPrev() = serviceConnection.transportControls?.skipToPrevious()
+	override fun onCleared() {
+		serviceConnection.playbackState.removeObserver(playbackStateObserver)
+		serviceConnection.nowPlaying.removeObserver(mediaMetadataObserver)
+		queue.removeObserver(queueObserver)
 
-    fun skipToNext() = serviceConnection.transportControls?.skipToNext()
+		updatePosition = false
+	}
 
-    fun stop() = serviceConnection.transportControls?.stop()
-
-    fun seekTo(position: Long) = serviceConnection.transportControls?.seekTo(position)
-
-    init {
-        serviceConnection.playbackState.observeForever(playbackStateObserver)
-        serviceConnection.nowPlaying.observeForever(mediaMetadataObserver)
-        checkPlaybackPosition()
-    }
-
-    override fun onCleared() {
-        serviceConnection.playbackState.removeObserver(playbackStateObserver)
-        serviceConnection.nowPlaying.removeObserver(mediaMetadataObserver)
-
-        updatePosition = false
-    }
-
-    private fun updateState(mediaMetadata: MediaMetadataCompat) {
-        CoroutineScope(Dispatchers.IO).launch {
-            if (mediaMetadata.duration > 0 && mediaMetadata.id != null) {
-                _mediaMetadata.postValue(NowPlayingMetadata(
-                    mediaMetadata.id!!,
+	private fun updateState(mediaMetadata: MediaMetadataCompat) {
+		CoroutineScope(Dispatchers.IO).launch {
+			if (mediaMetadata.duration > 0 && mediaMetadata.id != null) {
+				_mediaMetadata.postValue(NowPlayingMetadata(
+                    mediaMetadata.id,
                     mediaMetadata.displayIconUri,
                     mediaMetadata.displayTitle?.trim(),
                     mediaMetadata.displaySubtitle?.trim(),
@@ -115,32 +124,32 @@ class PlayingViewModel(app: Application, private val serviceConnection: ServiceC
                         (hsl[2] > 0.6 && hsl[1] < 0.6) || hsl[2] < 0.4
                     }.generate())
                 )
-            }
-        }
-    }
+			}
+		}
+	}
 
-    fun playPause() = serviceConnection.transportControls?.apply {
-        when (_playbackState.value?.state) {
+	fun playPause() = serviceConnection.transportControls?.apply {
+		when (_playbackState.value?.state) {
             PlaybackStateCompat.STATE_PLAYING,
             PlaybackStateCompat.STATE_BUFFERING,
             -> pause()
-            else -> play()
-        }
-    }
+			else -> play()
+		}
+	}
 
-    class Factory(private val app: Application, private val serviceConnection: ServiceConnection, private val repository: Repository) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T = PlayingViewModel(app, serviceConnection, repository) as T
-    }
+	@Suppress("UNCHECKED_CAST")
+	class Factory(private val app: Application, private val serviceConnection: ServiceConnection, private val repository: Repository) : ViewModelProvider.Factory {
+		override fun <T : ViewModel?> create(modelClass: Class<T>): T = PlayingViewModel(app, serviceConnection, repository) as T
+	}
 }
 
 inline val PlaybackStateCompat.currentPlayBackPosition: Long
-    get() = if (state == PlaybackStateCompat.STATE_PLAYING) {
-        val timeDelta = SystemClock.elapsedRealtime() - lastPositionUpdateTime
-        (position + (timeDelta * playbackSpeed)).toLong()
-    } else {
-        position
-    }
+	get() = if (state == PlaybackStateCompat.STATE_PLAYING) {
+		val timeDelta = SystemClock.elapsedRealtime() - lastPositionUpdateTime
+		(position + (timeDelta * playbackSpeed)).toLong()
+	} else {
+		position
+	}
 
 private const val POSITION_UPDATE_INTERVAL_MILLIS = 100L
 

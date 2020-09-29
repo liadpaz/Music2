@@ -16,96 +16,103 @@ import androidx.annotation.DrawableRes
 import androidx.databinding.BindingAdapter
 import androidx.palette.graphics.Palette
 import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager2.widget.ViewPager2
 import com.liadpaz.music.R
 import com.liadpaz.music.service.utils.EXTRA_SONGS_NUM
 import com.liadpaz.music.ui.adapters.*
 import com.liadpaz.music.ui.viewmodels.PlayingViewModel
 import com.liadpaz.music.utils.extensions.findColor
 
-@BindingAdapter("app:songs")
+@BindingAdapter("songs")
 fun setSongs(recyclerView: RecyclerView, songs: List<MediaBrowserCompat.MediaItem>?) = (recyclerView.adapter as? SongsAdapter)?.submitList(songs)
 
-@BindingAdapter("app:playlistSongs")
+@BindingAdapter("playlistSongs")
 fun setPlaylistSongs(recyclerView: RecyclerView, songs: List<MediaBrowserCompat.MediaItem>?) =
-    (recyclerView.adapter as? PlaylistAdapter)?.submitList(songs)
+	(recyclerView.adapter as? PlaylistAdapter)?.submitList(songs)
 
-@BindingAdapter("app:playlists")
+@BindingAdapter("playlists")
 fun setPlaylists(recyclerView: RecyclerView, playlists: List<MediaBrowserCompat.MediaItem>?) =
-    (recyclerView.adapter as? PlaylistsAdapter)?.submitList(playlists)
+	(recyclerView.adapter as? PlaylistsAdapter)?.submitList(playlists)
 
-@BindingAdapter("app:albums")
+@BindingAdapter("albums")
 fun setAlbums(recyclerView: RecyclerView, albums: List<MediaBrowserCompat.MediaItem>?) = (recyclerView.adapter as? AlbumsAdapter)?.submitList(albums)
 
-@BindingAdapter("app:artists")
+@BindingAdapter("artists")
 fun setArtists(recyclerView: RecyclerView, artists: List<MediaBrowserCompat.MediaItem>?) =
-    (recyclerView.adapter as? ArtistsAdapter)?.submitList(artists)
+	(recyclerView.adapter as? ArtistsAdapter)?.submitList(artists)
 
-@BindingAdapter("app:uri")
+@BindingAdapter("uri")
 fun setUri(imageView: ImageView, uri: Uri?) = GlideApp.with(imageView).load(uri).into(imageView)
 
-@BindingAdapter("app:playlistUri")
+@BindingAdapter("playlistUri")
 fun setPlaylistUri(imageView: ImageView, bundle: Bundle?) =
-    bundle?.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI).takeUnless { uri -> uri.isNullOrEmpty() }?.let { uri ->
-        GlideApp.with(imageView).load(Uri.parse(uri)).into(imageView)
-    }
+	bundle?.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI).takeUnless { uri -> uri.isNullOrEmpty() }?.let { uri ->
+		GlideApp.with(imageView).load(Uri.parse(uri)).into(imageView)
+	}
 
-@BindingAdapter("app:playPause")
+@BindingAdapter("playPause")
 fun setPlayPause(imageButton: ImageButton, playbackState: PlaybackStateCompat?) = GlideApp.with(imageButton).load(
-    when (playbackState?.state) {
-        PlaybackStateCompat.STATE_BUFFERING,
-        PlaybackStateCompat.STATE_PLAYING,
-        -> R.drawable.ic_notification_pause
-        else -> R.drawable.ic_notification_play
-    }).into(imageButton)
+	when (playbackState?.state) {
+		PlaybackStateCompat.STATE_BUFFERING,
+		PlaybackStateCompat.STATE_PLAYING,
+		-> R.drawable.ic_notification_pause
+		else -> R.drawable.ic_notification_play
+	}).into(imageButton)
 
-@BindingAdapter("app:resource")
+@BindingAdapter("resource")
 fun setResource(imageButton: ImageButton, @DrawableRes res: Int) =
-    GlideApp.with(imageButton).load(res).into(imageButton)
+	GlideApp.with(imageButton).load(res).into(imageButton)
 
-@BindingAdapter("app:queue")
+@BindingAdapter("queue")
 fun setQueue(recyclerView: RecyclerView, queue: List<MediaMetadataCompat>?) = (recyclerView.adapter as? QueueAdapter)?.submitList(queue)
 
-@BindingAdapter("app:max")
+@BindingAdapter("max")
 fun setMax(seekBar: SeekBar, max: Number?) {
-    seekBar.max = max?.toInt() ?: 0
+	seekBar.max = max?.toInt() ?: 0
 }
 
-@BindingAdapter("app:time")
+@BindingAdapter("time")
 fun setTime(textView: TextView, time: Number?) {
-    textView.text = PlayingViewModel.NowPlayingMetadata.timestampToMSS(time?.toLong() ?: 0)
+	textView.text = PlayingViewModel.NowPlayingMetadata.timestampToMSS(time?.toLong() ?: 0)
 }
 
-@BindingAdapter("app:progress")
+@BindingAdapter("progress")
 fun setProgress(seekBar: SeekBar, progress: Number?) {
-    seekBar.progress = progress?.toInt() ?: 0
+	seekBar.progress = progress?.toInt() ?: 0
 }
 
-@BindingAdapter("app:background")
+@BindingAdapter("background")
 fun setBackground(view: View, palette: Palette?) = palette?.let {
-    view.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(it.getDominantColor(Color.GRAY), it.findColor()))
+	view.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(it.getDominantColor(Color.GRAY), it.findColor()))
 }
 
-@BindingAdapter("app:repeatMode")
+@BindingAdapter("repeatMode")
 fun setRepeatMode(imageButton: ImageButton, @PlaybackStateCompat.RepeatMode repeatMode: Int) =
-    GlideApp.with(imageButton).load(if (repeatMode == PlaybackStateCompat.REPEAT_MODE_ALL) R.drawable.ic_repeat else R.drawable.ic_repeat_one).into(imageButton)
+	GlideApp.with(imageButton).load(if (repeatMode == PlaybackStateCompat.REPEAT_MODE_ALL) R.drawable.ic_repeat else R.drawable.ic_repeat_one).into(imageButton)
 
-@BindingAdapter("app:artistSongs")
+@BindingAdapter("artistSongs")
 fun setArtistSongs(textView: TextView, artist: MediaBrowserCompat.MediaItem) {
-    textView.text = textView.context.getString(
-        R.string.item_artist_songs, artist.description.extras?.getInt(EXTRA_SONGS_NUM) ?: 0
-    )
+	textView.text = textView.context.getString(
+		R.string.item_artist_songs, artist.description.extras?.getInt(EXTRA_SONGS_NUM) ?: 0
+	)
 }
 
-@BindingAdapter("app:playlistSongs")
+@BindingAdapter("playlistSongs")
 fun setPlaylistSongs(textView: TextView, bundle: Bundle?) {
-    textView.text = textView.context.getString(R.string.item_artist_songs, bundle?.getInt(EXTRA_SONGS_NUM))
+	textView.text = textView.context.getString(R.string.item_artist_songs, bundle?.getInt(EXTRA_SONGS_NUM))
 }
 
-@BindingAdapter("app:smallPlaylists")
-fun setSmallPlaylists(recyclerView: RecyclerView, playlists: List<MediaBrowserCompat.MediaItem>?) =
-    (recyclerView.adapter as? SmallPlaylistsAdapter)?.setList(playlists?.map { it.description.title.toString() }?.subList(1, playlists.size))
+@BindingAdapter("queuePair")
+fun setQueuePair(viewPager2: ViewPager2, queuePair: Pair<List<MediaMetadataCompat>, Int>?) = queuePair?.takeIf { it.first.isNotEmpty() }?.let {
+	(viewPager2.adapter as? AlbumArtViewPagerAdapter)?.submitList(queuePair.first)
+	viewPager2.setCurrentItem(it.second, false)
+}
 
-@BindingAdapter("app:smallArtists")
+@BindingAdapter("smallPlaylists")
+fun setSmallPlaylists(recyclerView: RecyclerView, playlists: List<MediaBrowserCompat.MediaItem>?) =
+	(recyclerView.adapter as? SmallPlaylistsAdapter)?.setList(playlists?.map { it.description.title.toString() }?.subList(1, playlists.size))
+
+@BindingAdapter("smallArtists")
 fun setSmallArtists(recyclerView: RecyclerView, artists: List<String>?) = (recyclerView.adapter as? SmallArtistsAdapter)?.setList(artists)
 
 private const val TAG = "BindingAdapters"

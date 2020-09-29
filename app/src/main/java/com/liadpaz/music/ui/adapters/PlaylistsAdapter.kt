@@ -12,7 +12,7 @@ import com.liadpaz.music.service.utils.PLAYLISTS_ROOT
 import com.liadpaz.music.utils.C
 import com.liadpaz.music.utils.extensions.layoutInflater
 
-class PlaylistsAdapter(private val onPlaylistClick: (MediaBrowserCompat.MediaItem) -> Unit, private val onPlaylistLongClick: (MediaBrowserCompat.MediaItem) -> Unit, private val onCreateClick: () -> Unit) : AbstractHeaderListAdapter<MediaBrowserCompat.MediaItem, RecyclerView.ViewHolder>(C.diffCallback) {
+class PlaylistsAdapter(private val onPlaylistClick: (MediaBrowserCompat.MediaItem) -> Unit, private val onPlaylistLongClick: (MediaBrowserCompat.MediaItem) -> Unit, private val onCreateClick: () -> Unit) : AbstractHeaderListAdapter<MediaBrowserCompat.MediaItem, RecyclerView.ViewHolder>(C.mediaItemDiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder = when (viewType) {
         TYPE_CREATE -> CreateViewHolder.create(parent, onCreateClick)

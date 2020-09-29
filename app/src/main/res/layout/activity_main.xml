@@ -74,13 +74,15 @@
                     android:id="@+id/viewPager"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
+                    android:clipToPadding="false"
                     android:nestedScrollingEnabled="true"
                     android:visibility="invisible"
                     app:layout_constraintBottom_toTopOf="@id/tvSongTitleSmall"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/guidelineTopScreen"
-                    app:layout_constraintVertical_bias="0.7" />
+                    app:layout_constraintVertical_bias="0.7"
+                    app:queuePair="@{viewModel.queuePair}" />
 
                 <ImageView
                     android:id="@+id/ivArtPreview"

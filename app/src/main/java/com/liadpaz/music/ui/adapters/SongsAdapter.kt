@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.liadpaz.music.ui.utils.*
 import com.liadpaz.music.utils.C
 
-class SongsAdapter(private val onItemClick: (MediaBrowserCompat.MediaItem, Int) -> Unit, private val onOpenMenu: (View, MediaBrowserCompat.MediaItem) -> Unit, private val onShuffleClick: () -> Unit) : AbstractHeaderListAdapter<MediaBrowserCompat.MediaItem, RecyclerView.ViewHolder>(C.diffCallback) {
+class SongsAdapter(private val onItemClick: (MediaBrowserCompat.MediaItem, Int) -> Unit, private val onOpenMenu: (View, MediaBrowserCompat.MediaItem) -> Unit, private val onShuffleClick: () -> Unit) : AbstractHeaderListAdapter<MediaBrowserCompat.MediaItem, RecyclerView.ViewHolder>(C.mediaItemDiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder = when (viewType) {
         TYPE_SHUFFLE -> ShuffleViewHolder.create(parent, onShuffleClick)

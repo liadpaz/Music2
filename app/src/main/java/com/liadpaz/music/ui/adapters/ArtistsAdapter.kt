@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.liadpaz.music.databinding.ItemArtistBinding
 import com.liadpaz.music.utils.C
 
-class ArtistsAdapter(private val onItemClick: (MediaBrowserCompat.MediaItem) -> Unit) : ListAdapter<MediaBrowserCompat.MediaItem, ArtistsAdapter.ArtistViewHolder>(C.diffCallback) {
+class ArtistsAdapter(private val onItemClick: (MediaBrowserCompat.MediaItem) -> Unit) : ListAdapter<MediaBrowserCompat.MediaItem, ArtistsAdapter.ArtistViewHolder>(C.mediaItemDiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ArtistViewHolder =
         ArtistViewHolder(ItemArtistBinding.inflate(LayoutInflater.from(parent.context), parent, false), onItemClick)

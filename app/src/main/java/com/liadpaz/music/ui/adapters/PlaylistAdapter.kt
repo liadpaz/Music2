@@ -13,7 +13,7 @@ import com.liadpaz.music.ui.utils.*
 import com.liadpaz.music.utils.C
 import com.liadpaz.music.utils.extensions.layoutInflater
 
-class PlaylistAdapter(private val id: String, private val onItemClick: (MediaBrowserCompat.MediaItem, Int) -> Unit, private val onOpenMenu: (View, MediaBrowserCompat.MediaItem, Int) -> Unit, private val onShuffleClick: () -> Unit, private val onMoveClick: (RecyclerView.ViewHolder) -> Unit) : AbstractHeaderListAdapter<MediaBrowserCompat.MediaItem, RecyclerView.ViewHolder>(C.diffCallback) {
+class PlaylistAdapter(private val id: String, private val onItemClick: (MediaBrowserCompat.MediaItem, Int) -> Unit, private val onOpenMenu: (View, MediaBrowserCompat.MediaItem, Int) -> Unit, private val onShuffleClick: () -> Unit, private val onMoveClick: (RecyclerView.ViewHolder) -> Unit) : AbstractHeaderListAdapter<MediaBrowserCompat.MediaItem, RecyclerView.ViewHolder>(C.mediaItemDiffCallback) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder = when (viewType) {
         TYPE_SHUFFLE -> ShuffleViewHolder.create(parent, onShuffleClick)
         TYPE_SONG -> SongViewHolder.create(parent, onItemClick, { anchor, mediaItem -> onOpenMenu(anchor, mediaItem, -1) })
